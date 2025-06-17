@@ -1,84 +1,66 @@
-# Turborepo starter
+# ♟️ Chess App
 
-This Turborepo starter is maintained by the Turborepo core team.
+A real-time multiplayer chess application built using **Next.js 14 (App Router)**, **WebSockets**, and **Tailwind CSS**. Play anonymously or sign in, challenge friends with custom time controls, and enjoy a clean, responsive UI.
 
-## Using this example
+---
 
-Run the following command:
+## 🌐 Live Demo
 
-```sh
-npx create-turbo@latest
-```
+>
 
-## What's inside?
+---
 
-This Turborepo includes the following packages/apps:
+## 🧩 Features
 
-### Apps and Packages
+- ✅ Real-time chess game via **WebSockets**
+- ✅ Dark theme with **black + violet** aesthetic
+- ✅ Guest play (no auth required)
+- ✅ Custom time controls (e.g., 1+0, 3+2, 10+5)
+- ✅ Join via **room code**
+- ✅ Endgame result modal with **move replay**
+- ✅ Move history table
+- ✅ Responsive UI (mobile-first)
+- ✅ Profile page for registered users
 
-- `docs`: a [Next.js](https://nextjs.org/) app
-- `web`: another [Next.js](https://nextjs.org/) app
-- `@repo/ui`: a stub React component library shared by both `web` and `docs` applications
-- `@repo/eslint-config`: `eslint` configurations (includes `eslint-config-next` and `eslint-config-prettier`)
-- `@repo/typescript-config`: `tsconfig.json`s used throughout the monorepo
+---
 
-Each package/app is 100% [TypeScript](https://www.typescriptlang.org/).
+## 🚀 Tech Stack
 
-### Utilities
+| Tech             | Description                         |
+| ---------------- | ----------------------------------- |
+| Next.js 14       | React framework with App Router     |
+| Tailwind CSS     | Utility-first styling framework     |
+| ShadCN UI        | Accessible and styled UI components |
+| WebSockets       | Real-time communication (via `ws`)  |
+| Zustand          | Lightweight state management        |
+| chess.js         | Game logic, legality, FEN, PGN      |
+| react-chessboard | Chessboard rendering UI             |
+| Vercel           | Hosting and deployment              |
 
-This Turborepo has some additional tools already setup for you:
+---
 
-- [TypeScript](https://www.typescriptlang.org/) for static type checking
-- [ESLint](https://eslint.org/) for code linting
-- [Prettier](https://prettier.io) for code formatting
-
-### Build
-
-To build all apps and packages, run the following command:
-
-```
-cd my-turborepo
-pnpm build
-```
-
-### Develop
-
-To develop all apps and packages, run the following command:
+## 📂 Project Structure (Turborepo)
 
 ```
-cd my-turborepo
-pnpm dev
+apps/
+  web/               → Next.js frontend (App Router)
+  server/            → WebSocket backend (Node.js + ws)
+
+packages/
+  ui/                → Shared ShadCN components (optional)
 ```
 
-### Remote Caching
+## 🧪 To-Do / Roadmap
 
-> [!TIP]
-> Vercel Remote Cache is free for all plans. Get started today at [vercel.com](https://vercel.com/signup?/signup?utm_source=remote-cache-sdk&utm_campaign=free_remote_cache).
+- [ ] Add puzzle mode
+- [ ] Spectator support
+- [ ] Game history storage (with Prisma)
+- [ ] AI bot mode (Stockfish integration)
 
-Turborepo can use a technique known as [Remote Caching](https://turborepo.com/docs/core-concepts/remote-caching) to share cache artifacts across machines, enabling you to share build caches with your team and CI/CD pipelines.
+---
 
-By default, Turborepo will cache locally. To enable Remote Caching you will need an account with Vercel. If you don't have an account you can [create one](https://vercel.com/signup?utm_source=turborepo-examples), then enter the following commands:
+## 🙏 Acknowledgments
 
-```
-cd my-turborepo
-npx turbo login
-```
-
-This will authenticate the Turborepo CLI with your [Vercel account](https://vercel.com/docs/concepts/personal-accounts/overview).
-
-Next, you can link your Turborepo to your Remote Cache by running the following command from the root of your Turborepo:
-
-```
-npx turbo link
-```
-
-## Useful Links
-
-Learn more about the power of Turborepo:
-
-- [Tasks](https://turborepo.com/docs/crafting-your-repository/running-tasks)
-- [Caching](https://turborepo.com/docs/crafting-your-repository/caching)
-- [Remote Caching](https://turborepo.com/docs/core-concepts/remote-caching)
-- [Filtering](https://turborepo.com/docs/crafting-your-repository/running-tasks#using-filters)
-- [Configuration Options](https://turborepo.com/docs/reference/configuration)
-- [CLI Usage](https://turborepo.com/docs/reference/command-line-reference)
+- [chess.js](https://github.com/jhlywa/chess.js)
+- [react-chessboard](https://github.com/Clariity/react-chessboard)
+- [Vercel](https://vercel.com)
