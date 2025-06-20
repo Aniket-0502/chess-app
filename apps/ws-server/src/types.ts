@@ -86,7 +86,7 @@ export type ClientMessage =
 // Server -> Client Messages
 export type ServerMessage =
   | { type: "room_created"; roomId: string }
-  | { type: "joined"; role: Role }
+  | { type: "joined"; role: Role; roomId: string }
   | {
       type: "game_start";
       fen: string;

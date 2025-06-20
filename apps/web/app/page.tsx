@@ -1,3 +1,11 @@
-export default function Home() {
-  return <h1 className="text-3xl font-bold underline">Hello world!</h1>;
+// app/page.tsx
+
+import { LandingHero } from "../components/landing/LandingHero";
+
+export default function HomePage() {
+  return (
+    <main className="min-h-screen bg-black text-white">
+      <LandingHero />
+    </main>
+  );
 }

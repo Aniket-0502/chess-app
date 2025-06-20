@@ -19,13 +19,23 @@ import {
   getGame,
   removeGame,
 } from "./gameManager";
-import { startClock } from "./clock"; // ✅ IMPORT CLOCK
+import { startClock } from "./clock";
 import type { ServerMessage, ClientMessage } from "./types";
 
 const server = createServer();
 const wss = new WebSocketServer({ server });
 
 wss.on("connection", (socket) => {
+  console.log("[WS] ✅ New client connected");
+
+  // 👉 Send confirmation of connection
+  socket.send(
+    JSON.stringify({
+      type: "connected",
+      message: "Connection established",
+    })
+  );
+
   socket.on("message", (data) => {
     let parsed: ClientMessage;
     try {
@@ -39,7 +49,6 @@ wss.on("connection", (socket) => {
         socket.send(JSON.stringify(msg));
       }
     };
-
     switch (parsed.type) {
       case "create": {
         const roomId = createRoom(
@@ -59,11 +68,9 @@ wss.on("connection", (socket) => {
           send({ type: "error", message: "Room not found" });
           return;
         }
-
-        send({ type: "joined", role });
-
         const room = getRoom(socket);
         const game = getGame(parsed.roomId);
+        send({ type: "joined", role, roomId: parsed.roomId });
 
         if (role === "player" && room && room.players.length === 2 && game) {
           getAllSocketsInRoom(room.id).forEach((client) => {
@@ -104,7 +111,7 @@ wss.on("connection", (socket) => {
         client.disconnected = false;
         if (client.reconnectTimeout) clearTimeout(client.reconnectTimeout);
 
-        send({ type: "joined", role: "player" });
+        send({ type: "joined", role: "player", roomId });
         send({
           type: "game_start",
           fen: game.chess.fen(),
