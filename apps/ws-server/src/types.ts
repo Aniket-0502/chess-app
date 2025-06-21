@@ -27,9 +27,9 @@ export interface Room {
   players: ConnectedClient[];
   spectators: ConnectedClient[];
   timeControl: TimeControl;
-  creatorColorChoice?: "white" | "black"; // Color chosen by the creator
+  creatorColorChoice?: "white" | "black";
   createdAt: number;
-  drawOffer?: DrawOffer; // Optional draw offer
+  drawOffer?: DrawOffer;
 }
 
 // Draw Offer Info
@@ -50,15 +50,11 @@ export interface GameWrapper {
   currentTurn: "w" | "b";
   drawOffer?: DrawOffer;
   gameOver?: boolean;
-
-  // ✅ Added for tracking move history
   history: string[];
-
-  // ✅ Updated to use setInterval for timeout checking
   timeoutHandle?: NodeJS.Timeout;
 }
 
-// Client -> Server Messages
+// ✅ Client → Server Messages
 export type ClientMessage =
   | {
       type: "create";
@@ -81,9 +77,10 @@ export type ClientMessage =
   | { type: "resign" }
   | { type: "draw_offer" }
   | { type: "draw_response"; accepted: boolean }
-  | { type: "reconnect"; userId: string; roomId: string }; // ✅ NEW
+  | { type: "reconnect"; userId: string; roomId: string }
+  | { type: "status_check" }; // ✅ NEW
 
-// Server -> Client Messages
+// ✅ Server → Client Messages
 export type ServerMessage =
   | { type: "room_created"; roomId: string }
   | { type: "joined"; role: Role; roomId: string }
@@ -119,7 +116,7 @@ export type ServerMessage =
       loser?: "white" | "black";
     }
   | {
-      type: "reconnected"; // ✅ NEW
+      type: "reconnected";
       color: "white" | "black";
       fen: string;
       timeControl: TimeControl;
@@ -128,6 +125,11 @@ export type ServerMessage =
         black: number;
       };
       history: string[];
+    }
+  | {
+      type: "status"; // ✅ NEW
+      inGame: boolean;
+      roomId: string | null;
     }
   | {
       type: "error";

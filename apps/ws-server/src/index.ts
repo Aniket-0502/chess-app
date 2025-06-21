@@ -200,6 +200,17 @@ wss.on("connection", (socket) => {
         }
         break;
       }
+      case "status_check": {
+        const roomId = getRoomId(socket);
+        const game = roomId ? getGame(roomId) : null;
+
+        send({
+          type: "status",
+          inGame: !!(roomId && game),
+          roomId: roomId || null,
+        });
+        break;
+      }
 
       case "resign": {
         const roomId = getRoomId(socket);
