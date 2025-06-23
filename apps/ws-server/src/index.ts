@@ -28,12 +28,8 @@ const wss = new WebSocketServer({ server });
 wss.on("connection", (socket) => {
   console.log("[WS] ✅ New client connected");
 
-  // 👉 Send confirmation of connection
   socket.send(
-    JSON.stringify({
-      type: "connected",
-      message: "Connection established",
-    })
+    JSON.stringify({ type: "connected", message: "Connection established" })
   );
 
   socket.on("message", (data) => {
@@ -49,13 +45,15 @@ wss.on("connection", (socket) => {
         socket.send(JSON.stringify(msg));
       }
     };
+
     switch (parsed.type) {
       case "create": {
         const roomId = createRoom(
           socket,
           parsed.timeControl,
           parsed.creatorColorChoice,
-          parsed.userId
+          parsed.userId,
+          parsed.name
         );
         createGame(roomId, parsed.timeControl);
         send({ type: "room_created", roomId });
@@ -63,16 +61,26 @@ wss.on("connection", (socket) => {
       }
 
       case "join": {
-        const role = joinRoom(socket, parsed.roomId, parsed.userId);
+        const role = joinRoom(
+          socket,
+          parsed.roomId,
+          parsed.userId,
+          parsed.name
+        );
         if (role === "not_found") {
           send({ type: "error", message: "Room not found" });
           return;
         }
+
         const room = getRoom(socket);
         const game = getGame(parsed.roomId);
         send({ type: "joined", role, roomId: parsed.roomId });
 
-        if (role === "player" && room && room.players.length === 2 && game) {
+        if (room && room.players.length === 2 && game) {
+          const playersMap = Object.fromEntries(
+            room.players.map((p) => [p.color!, p.userId])
+          );
+
           getAllSocketsInRoom(room.id).forEach((client) => {
             const color = room.players.find((p) => p.socket === client)?.color;
             client.send(
@@ -83,9 +91,24 @@ wss.on("connection", (socket) => {
                 timeControl: game.timeControl,
               })
             );
+
+            client.send(
+              JSON.stringify({
+                type: "status",
+                inGame: true,
+                roomId: room.id,
+                players: playersMap,
+                whiteName:
+                  room.players.find((p) => p.color === "white")?.name ||
+                  "White",
+                blackName:
+                  room.players.find((p) => p.color === "black")?.name ||
+                  "Black",
+                timeControl: game.timeControl,
+              })
+            );
           });
 
-          // ✅ START THE CLOCK
           startClock(game);
         }
         break;
@@ -123,20 +146,12 @@ wss.on("connection", (socket) => {
       }
 
       case "move": {
-        console.log("[server] Received move:", parsed);
-
         const roomId = getRoomId(socket);
         const room = getRoom(socket);
-        if (!roomId || !room) {
-          console.log("[server] No room found for move");
-          return;
-        }
+        if (!roomId || !room) return;
 
         const player = room.players.find((p) => p.socket === socket);
-        if (!player || !player.color) {
-          console.log("[server] No valid player or color");
-          return;
-        }
+        if (!player || !player.color) return;
 
         const result = makeMove(
           roomId,
@@ -145,9 +160,7 @@ wss.on("connection", (socket) => {
           parsed.promotion,
           player.color
         );
-
         if (!result.valid) {
-          console.log("[server] Invalid move:", result.reason);
           if (result.timedOut) {
             getAllSocketsInRoom(roomId).forEach((s) =>
               s.send(
@@ -162,10 +175,7 @@ wss.on("connection", (socket) => {
             return;
           }
 
-          send({
-            type: "error",
-            message: result.reason || "Invalid move",
-          });
+          send({ type: "error", message: result.reason || "Invalid move" });
           return;
         }
 
@@ -184,9 +194,6 @@ wss.on("connection", (socket) => {
         if (result.gameOver) {
           const gameWinner =
             message.history.length % 2 === 0 ? "black" : "white";
-          console.log(
-            `[game_over] ♟️ Game over in room ${roomId}, winner: ${gameWinner}`
-          );
           getAllSocketsInRoom(roomId).forEach((s) =>
             s.send(
               JSON.stringify({
@@ -200,14 +207,31 @@ wss.on("connection", (socket) => {
         }
         break;
       }
+
       case "status_check": {
         const roomId = getRoomId(socket);
+        const room = roomId ? rooms.get(roomId) : null;
         const game = roomId ? getGame(roomId) : null;
+
+        if (!room || !game) {
+          send({ type: "status", inGame: false, roomId: null });
+          return;
+        }
+
+        const whitePlayer = room.players.find((p) => p.color === "white");
+        const blackPlayer = room.players.find((p) => p.color === "black");
 
         send({
           type: "status",
-          inGame: !!(roomId && game),
-          roomId: roomId || null,
+          inGame: true,
+          roomId: roomId ?? null,
+          players: {
+            white: whitePlayer?.userId || "White",
+            black: blackPlayer?.userId || "Black",
+          },
+          whiteName: whitePlayer?.name || "White",
+          blackName: blackPlayer?.name || "Black",
+          timeControl: room.timeControl,
         });
         break;
       }
@@ -221,7 +245,6 @@ wss.on("connection", (socket) => {
         if (!player || !player.color) return;
 
         const result = resignGame(roomId, player.color);
-
         if (result.success) {
           getAllSocketsInRoom(roomId).forEach((s) =>
             s.send(

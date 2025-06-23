@@ -16,10 +16,12 @@ import {
 import { Button } from "../components/ui/button";
 import Image from "next/image";
 import { useSocketStore } from "../../store/socketStore";
+import { useGameStore } from "../../store/gameStore";
 
 export default function GameSetupCard() {
   const [userId, setUserId] = useState("");
   const { socket, setSocket } = useSocketStore();
+  const { setGameInfo } = useGameStore();
   const router = useRouter();
 
   const [createName, setCreateName] = useState("");
@@ -55,21 +57,22 @@ export default function GameSetupCard() {
         }
 
         if (message.type === "room_created") {
-          localStorage.setItem("playerName", createName);
-          localStorage.setItem("roomId", message.roomId); // ✅ use from server
           router.push("/play");
         }
 
         if (message.type === "joined") {
-          localStorage.setItem("playerName", joinName);
-          localStorage.setItem("roomId", message.roomId); // ✅ use from server (don't rely on input!)
+          newSocket.send(
+            JSON.stringify({
+              type: "status_check",
+            })
+          );
           router.push("/play");
         }
 
         console.log("[WS] Message from server:", message);
       };
     }
-  }, [router, socket, setSocket, createName, joinName, roomId]);
+  }, [router, socket, setSocket]);
 
   const parseTimeControl = (
     str: string
@@ -98,19 +101,29 @@ export default function GameSetupCard() {
 
     if (valid && socket?.readyState === WebSocket.OPEN) {
       const parsed = parseTimeControl(createTime);
-
-      // 👉 Determine final color choice
-      const finalColor =
+      const finalColor: "white" | "black" =
         createColor === "random"
           ? Math.random() < 0.5
             ? "white"
             : "black"
-          : createColor;
+          : (createColor as "white" | "black");
+
+      setGameInfo({
+        player1: createName,
+        player2: "",
+        player1Color: finalColor,
+        player2Color: finalColor === "white" ? "black" : "white",
+        roomId: "",
+        timeControl: parsed,
+      });
+
+      console.log("🟩 Sending create with name:", createName);
 
       socket.send(
         JSON.stringify({
           type: "create",
           userId,
+          name: createName, // ✅ send name
           creatorColorChoice: finalColor,
           timeControl: parsed,
         })
@@ -131,15 +144,28 @@ export default function GameSetupCard() {
     const valid = !newErrors.joinName && !newErrors.roomId;
 
     if (valid && socket?.readyState === WebSocket.OPEN) {
+      setGameInfo({
+        player1: "",
+        player2: joinName,
+        player1Color: "",
+        player2Color: "",
+        roomId: roomId,
+        timeControl: { time: 0, increment: 0 },
+      });
+
+      console.log("🟦 Sending join with name:", joinName);
+
       socket.send(
         JSON.stringify({
           type: "join",
           userId,
+          name: joinName, // ✅ send name
           roomId,
         })
       );
     }
   };
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-5 px-6 w-full max-w-5xl mx-auto mb-10">
       {/* CREATE GAME CARD */}
@@ -310,7 +336,7 @@ export default function GameSetupCard() {
                 placeholder="Enter 6-digit code"
                 value={roomId}
                 onChange={(e) => setRoomId(e.target.value)}
-                className={` tracking-[0.23em] px-3 py-2 text-sm border rounded-md ${
+                className={`tracking-[0.23em] px-3 py-2 text-sm border rounded-md ${
                   errors.roomId
                     ? "border-red-500 focus:border-red-500 focus:ring-red-500"
                     : "border-white/10"

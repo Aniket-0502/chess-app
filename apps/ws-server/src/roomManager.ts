@@ -19,12 +19,14 @@ export function createRoom(
   socket: WebSocket,
   timeControl: TimeControl,
   creatorColorChoice: "white" | "black" = "white",
-  userId?: string
+  userId?: string,
+  name?: string // ✅ New
 ): string {
   const roomId = generateRoomId();
   const player: ConnectedClient = {
     socket,
     userId,
+    name, // ✅ Store name
     role: "player",
     color: creatorColorChoice,
   };
@@ -46,7 +48,8 @@ export function createRoom(
 export function joinRoom(
   socket: WebSocket,
   roomId: string,
-  userId?: string
+  userId?: string,
+  name?: string // ✅ New
 ): "player" | "spectator" | "not_found" {
   const room = rooms.get(roomId);
   if (!room) return "not_found";
@@ -67,6 +70,7 @@ export function joinRoom(
     const spectator: ConnectedClient = {
       socket,
       userId,
+      name, // ✅ Store name even for spectators
       role: "spectator",
     };
     room.spectators.push(spectator);
@@ -80,6 +84,7 @@ export function joinRoom(
   const newPlayer: ConnectedClient = {
     socket,
     userId,
+    name, // ✅ Store name
     role: "player",
     color: newColor,
   };

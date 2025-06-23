@@ -13,6 +13,7 @@ export interface TimeControl {
 export interface ConnectedClient {
   socket: WebSocket;
   userId?: string;
+  name?: string; // ✅ ADDED: Player name
   role: Role;
   color?: "white" | "black";
 
@@ -61,11 +62,13 @@ export type ClientMessage =
       timeControl: TimeControl;
       creatorColorChoice?: "white" | "black";
       userId?: string;
+      name?: string; // ✅ ADDED
     }
   | {
       type: "join";
       roomId: string;
       userId?: string;
+      name?: string; // ✅ ADDED
     }
   | {
       type: "move";
@@ -127,9 +130,16 @@ export type ServerMessage =
       history: string[];
     }
   | {
-      type: "status"; // ✅ NEW
+      type: "status"; // ✅ EXTENDED
       inGame: boolean;
       roomId: string | null;
+      players?: {
+        white: string;
+        black: string;
+      };
+      whiteName?: string; // ✅ ADDED
+      blackName?: string; // ✅ ADDED
+      timeControl?: TimeControl;
     }
   | {
       type: "error";
