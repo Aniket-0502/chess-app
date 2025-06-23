@@ -8,14 +8,35 @@ interface GameStoreState {
   roomId: string | null;
   timeControl: { time: number; increment: number } | null;
 
+  fen: string;
+  color: "white" | "black" | null;
+
+  userId: string | null;
+
   setGameInfo: (data: {
     player1: string;
     player2: string;
-    player1Color: "white" | "black" | "";
-    player2Color: "white" | "black" | "";
+    player1Color: "white" | "black";
+    player2Color: "white" | "black";
     roomId: string;
     timeControl: { time: number; increment: number };
   }) => void;
+
+  setFullGameState: (data: {
+    fen: string;
+    color: "white" | "black";
+    player1: string;
+    player2: string;
+    player1Color: "white" | "black";
+    player2Color: "white" | "black";
+    roomId: string;
+    timeControl: { time: number; increment: number };
+  }) => void;
+
+  setFen: (fen: string) => void;
+  setColor: (color: "white" | "black") => void;
+
+  setUserId: (id: string) => void;
 }
 
 export const useGameStore = create<GameStoreState>((set) => ({
@@ -26,16 +47,38 @@ export const useGameStore = create<GameStoreState>((set) => ({
   roomId: null,
   timeControl: null,
 
+  fen: "start",
+  color: null,
+
+  userId: null,
+
   setGameInfo: (data) => {
     console.log("🛠️ setGameInfo called with:", data);
-
     set({
       player1: data.player1,
       player2: data.player2,
-      player1Color: data.player1Color === "" ? null : data.player1Color,
-      player2Color: data.player2Color === "" ? null : data.player2Color,
+      player1Color: data.player1Color,
+      player2Color: data.player2Color,
       roomId: data.roomId,
       timeControl: data.timeControl,
     });
   },
+
+  setFullGameState: (data) => {
+    console.log("🎯 setFullGameState:", data);
+    set({
+      fen: data.fen,
+      color: data.color,
+      player1: data.player1,
+      player2: data.player2,
+      player1Color: data.player1Color,
+      player2Color: data.player2Color,
+      roomId: data.roomId,
+      timeControl: data.timeControl,
+    });
+  },
+
+  setFen: (fen) => set({ fen }),
+  setColor: (color) => set({ color }),
+  setUserId: (id) => set({ userId: id }),
 }));

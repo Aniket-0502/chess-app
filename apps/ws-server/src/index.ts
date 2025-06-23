@@ -77,8 +77,10 @@ wss.on("connection", (socket) => {
         send({ type: "joined", role, roomId: parsed.roomId });
 
         if (room && room.players.length === 2 && game) {
+          const [player1, player2] = room.players;
+
           const playersMap = Object.fromEntries(
-            room.players.map((p) => [p.color!, p.userId])
+            room.players.map((p) => [p.color!, p.userId ?? "Unknown"])
           );
 
           getAllSocketsInRoom(room.id).forEach((client) => {
@@ -89,6 +91,10 @@ wss.on("connection", (socket) => {
                 fen: game.chess.fen(),
                 color,
                 timeControl: game.timeControl,
+                player1: player1?.userId ?? "Unknown",
+                player2: player2?.userId ?? "Unknown",
+                player1Color: player1?.color ?? "white",
+                player2Color: player2?.color ?? "black",
               })
             );
 
@@ -140,6 +146,10 @@ wss.on("connection", (socket) => {
           fen: game.chess.fen(),
           color: client.color!,
           timeControl: game.timeControl,
+          player1: room.players[0]?.userId ?? "Unknown",
+          player2: room.players[1]?.userId ?? "Unknown",
+          player1Color: room.players[0]?.color ?? "white",
+          player2Color: room.players[1]?.color ?? "black",
         });
 
         break;

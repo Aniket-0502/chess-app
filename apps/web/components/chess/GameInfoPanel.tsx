@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useGameStore } from "../../store/gameStore";
 import { useSocketStore } from "../../store/socketStore";
+import Image from "next/image";
 
 export default function GameInfoPanel() {
   const {
@@ -15,7 +16,9 @@ export default function GameInfoPanel() {
     setGameInfo,
   } = useGameStore();
   const { socket } = useSocketStore();
+
   const [loading, setLoading] = useState(true);
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     if (!socket) return;
@@ -24,20 +27,16 @@ export default function GameInfoPanel() {
       const message = JSON.parse(event.data);
 
       if (message.type === "status") {
-        console.log("✅ Status received in GameInfoPanel:", message);
-
         const whitePlayer = message.whiteName || "White";
         const blackPlayer = message.blackName || "Black";
-        const roomId = message.roomId;
-        const timeControl = message.timeControl;
 
         setGameInfo({
           player1: whitePlayer,
           player2: blackPlayer,
           player1Color: "white",
           player2Color: "black",
-          roomId,
-          timeControl,
+          roomId: message.roomId,
+          timeControl: message.timeControl,
         });
 
         setLoading(false);
@@ -48,7 +47,6 @@ export default function GameInfoPanel() {
 
     const interval = setInterval(() => {
       if (socket.readyState === WebSocket.OPEN) {
-        console.log("🟢 Sending status_check from GameInfoPanel");
         socket.send(JSON.stringify({ type: "status_check" }));
         clearInterval(interval);
       }
@@ -59,6 +57,13 @@ export default function GameInfoPanel() {
       clearInterval(interval);
     };
   }, [socket, setGameInfo]);
+
+  const handleCopy = () => {
+    if (!roomId) return;
+    navigator.clipboard.writeText(roomId);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
 
   if (
     loading ||
@@ -78,37 +83,84 @@ export default function GameInfoPanel() {
     );
   }
 
-  console.log("🔁 Rendered with:", {
-    player1,
-    player2,
-    roomId,
-    player1Color,
-    player2Color,
-    timeControl,
-  });
-
   return (
-    <div className="flex flex-col items-center justify-center mt-4 px-4 py-3 rounded-xl bg-[#1A2535] text-white shadow-md w-full max-w-md mx-auto border border-white/10">
-      <h2 className="text-xl font-bold mb-4">Game Info</h2>
+    <div className="flex flex-col gap-4 items-center bg-[#0F172B] border border-white/10 rounded-xl px-6 py-4 w-[340px] text-white shadow-lg">
+      {/* Room Code with Copy */}
+      <div className="flex justify-between items-center w-full bg-[#1D293D] px-4 py-3 rounded-lg relative">
+        <span className="text-[15px] tracking-wide font-medium">
+          Room Code : {roomId}
+        </span>
+        <button onClick={handleCopy}>
+          <Image
+            src="/copyIcon.svg"
+            alt="Copy"
+            width={18}
+            height={18}
+            className="ml-2 cursor-pointer"
+          />
+        </button>
+        {copied && (
+          <div className="absolute -bottom-6 right-2 bg-[#1A2535] px-2 py-1 rounded text-xs text-green-400">
+            Copied!
+          </div>
+        )}
+      </div>
 
-      <div className="grid grid-cols-2 gap-x-4 gap-y-3 w-full text-sm">
-        <div className="text-gray-400">Room Code:</div>
-        <div className="font-semibold tracking-wide">{roomId}</div>
+      {/* Player 1 */}
+      <div className="flex items-center w-full gap-3 bg-[#1D293D] px-4 py-3 rounded-lg">
+        <Image
+          src="/whitePlayerPhoto.svg"
+          alt="White Player"
+          width={20}
+          height={20}
+        />
+        <span className="text-sm">
+          {player1} <span className="text-gray-400">(White)</span>
+        </span>
+      </div>
 
-        <div className="text-gray-400">Time Control:</div>
-        <div className="font-semibold">
-          {timeControl.time / 60}+{timeControl.increment || 0}
-        </div>
+      {/* Player 2 */}
+      <div className="flex items-center w-full gap-3 bg-[#1D293D] px-4 py-3 rounded-lg">
+        <Image
+          src="/blackPlayerPhoto.svg"
+          alt="Black Player"
+          width={20}
+          height={20}
+        />
+        <span className="text-sm">
+          {player2} <span className="text-gray-400">(Black)</span>
+        </span>
+      </div>
 
-        <div className="text-gray-400">White:</div>
-        <div className="font-semibold">
-          {player1Color === "white" ? player1 : player2}
-        </div>
+      {/* Time Control */}
+      <div className="flex items-center w-full gap-3 bg-[#1D293D] px-4 py-3 rounded-lg">
+        <Image
+          src="/timeControlPhoto.svg"
+          alt="Time Control"
+          width={20}
+          height={20}
+        />
+        <span className="text-sm">
+          Time Control :{" "}
+          <span className="text-white font-medium">
+            {timeControl.time / 60}+{timeControl.increment || 0}
+          </span>
+          {"  "}
+          <span className="text-gray-400 text-xs ml-1">
+            (
+            {timeControl.time >= 600
+              ? "Classical"
+              : timeControl.time >= 300
+                ? "Rapid"
+                : "Blitz"}
+            )
+          </span>
+        </span>
+      </div>
 
-        <div className="text-gray-400">Black:</div>
-        <div className="font-semibold">
-          {player1Color === "black" ? player1 : player2}
-        </div>
+      {/* Your Turn To Play */}
+      <div className="w-full bg-[#1D293D] text-center py-3 rounded-lg text-[17px] font-bold mt-2">
+        Your Turn To Play
       </div>
     </div>
   );

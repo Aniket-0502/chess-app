@@ -43,6 +43,7 @@ export default function GameSetupCard() {
     const newId = existing || uuidv4();
     if (!existing) localStorage.setItem("userId", newId);
     setUserId(newId);
+    useGameStore.getState().setUserId(newId); // ✅ set the current player id
 
     if (!socket) {
       const newSocket = new WebSocket("ws://localhost:3001");
@@ -147,8 +148,8 @@ export default function GameSetupCard() {
       setGameInfo({
         player1: "",
         player2: joinName,
-        player1Color: "",
-        player2Color: "",
+        player1Color: "white",
+        player2Color: "black",
         roomId: roomId,
         timeControl: { time: 0, increment: 0 },
       });

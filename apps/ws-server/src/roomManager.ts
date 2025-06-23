@@ -1,7 +1,7 @@
 import { Room, ConnectedClient, TimeControl } from "./types";
 import { WebSocket } from "ws";
 
-export const rooms: Map<string, Room> = new Map(); // Exported for index.ts
+export const rooms: Map<string, Room> = new Map();
 const socketRoomMap: Map<WebSocket, string> = new Map();
 const RECONNECT_GRACE_PERIOD = 15 * 1000; // 15 seconds
 
@@ -20,13 +20,13 @@ export function createRoom(
   timeControl: TimeControl,
   creatorColorChoice: "white" | "black" = "white",
   userId?: string,
-  name?: string // ✅ New
+  name?: string
 ): string {
   const roomId = generateRoomId();
   const player: ConnectedClient = {
     socket,
     userId,
-    name, // ✅ Store name
+    name,
     role: "player",
     color: creatorColorChoice,
   };
@@ -49,16 +49,14 @@ export function joinRoom(
   socket: WebSocket,
   roomId: string,
   userId?: string,
-  name?: string // ✅ New
+  name?: string
 ): "player" | "spectator" | "not_found" {
   const room = rooms.get(roomId);
   if (!room) return "not_found";
 
   const existing = room.players.find((p) => p.userId && p.userId === userId);
   if (existing) {
-    if (existing.reconnectTimeout) {
-      clearTimeout(existing.reconnectTimeout);
-    }
+    if (existing.reconnectTimeout) clearTimeout(existing.reconnectTimeout);
     existing.socket = socket;
     existing.disconnected = false;
     existing.reconnectTimeout = undefined;
@@ -70,7 +68,7 @@ export function joinRoom(
     const spectator: ConnectedClient = {
       socket,
       userId,
-      name, // ✅ Store name even for spectators
+      name,
       role: "spectator",
     };
     room.spectators.push(spectator);
@@ -84,7 +82,7 @@ export function joinRoom(
   const newPlayer: ConnectedClient = {
     socket,
     userId,
-    name, // ✅ Store name
+    name,
     role: "player",
     color: newColor,
   };
@@ -108,7 +106,6 @@ export function markDisconnected(
   if (!player) return;
 
   player.disconnected = true;
-
   player.reconnectTimeout = setTimeout(() => {
     onTimeout(roomId, player.userId);
   }, RECONNECT_GRACE_PERIOD);
@@ -139,7 +136,6 @@ export function getRoom(socket: WebSocket): Room | undefined {
   return roomId ? rooms.get(roomId) : undefined;
 }
 
-// ✅ Added for general access
 export function getRoomById(roomId: string): Room | undefined {
   return rooms.get(roomId);
 }

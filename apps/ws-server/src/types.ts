@@ -92,6 +92,10 @@ export type ServerMessage =
       fen: string;
       color: "white" | "black";
       timeControl: TimeControl;
+      player1: string;
+      player2: string;
+      player1Color: "white" | "black";
+      player2Color: "white" | "black";
     }
   | {
       type: "move_made";
