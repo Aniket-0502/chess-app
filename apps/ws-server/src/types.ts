@@ -81,7 +81,7 @@ export type ClientMessage =
   | { type: "draw_offer" }
   | { type: "draw_response"; accepted: boolean }
   | { type: "reconnect"; userId: string; roomId: string }
-  | { type: "status_check" }; // ✅ NEW
+  | { type: "status_check" };
 
 // ✅ Server → Client Messages
 export type ServerMessage =
@@ -141,9 +141,11 @@ export type ServerMessage =
         white: string;
         black: string;
       };
-      whiteName?: string; // ✅ ADDED
-      blackName?: string; // ✅ ADDED
+      whiteName?: string;
+      blackName?: string;
       timeControl?: TimeControl;
+      whitePlayerUserId?: string; // ✅ NEW
+      blackPlayerUserId?: string; // ✅ NEW
     }
   | {
       type: "error";

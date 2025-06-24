@@ -43,7 +43,7 @@ export default function GameSetupCard() {
     const newId = existing || uuidv4();
     if (!existing) localStorage.setItem("userId", newId);
     setUserId(newId);
-    useGameStore.getState().setUserId(newId); // ✅ set the current player id
+    useGameStore.getState().setUserId(newId);
 
     if (!socket) {
       const newSocket = new WebSocket("ws://localhost:3001");
@@ -62,12 +62,17 @@ export default function GameSetupCard() {
         }
 
         if (message.type === "joined") {
-          newSocket.send(
-            JSON.stringify({
-              type: "status_check",
-            })
-          );
+          newSocket.send(JSON.stringify({ type: "status_check" }));
           router.push("/play");
+        }
+
+        if (message.type === "status" && message.players) {
+          useGameStore.getState().setPlayerUserIds({
+            whitePlayerUserId: message.players.white,
+            blackPlayerUserId: message.players.black,
+          });
+
+          console.log("✅ setPlayerUserIds from status:", message.players);
         }
 
         console.log("[WS] Message from server:", message);
@@ -124,7 +129,7 @@ export default function GameSetupCard() {
         JSON.stringify({
           type: "create",
           userId,
-          name: createName, // ✅ send name
+          name: createName,
           creatorColorChoice: finalColor,
           timeControl: parsed,
         })
@@ -160,7 +165,7 @@ export default function GameSetupCard() {
         JSON.stringify({
           type: "join",
           userId,
-          name: joinName, // ✅ send name
+          name: joinName,
           roomId,
         })
       );

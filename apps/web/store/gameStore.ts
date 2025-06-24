@@ -12,6 +12,8 @@ interface GameStoreState {
   color: "white" | "black" | null;
 
   userId: string | null;
+  whitePlayerUserId: string | null;
+  blackPlayerUserId: string | null;
 
   setGameInfo: (data: {
     player1: string;
@@ -33,6 +35,11 @@ interface GameStoreState {
     timeControl: { time: number; increment: number };
   }) => void;
 
+  setPlayerUserIds: (data: {
+    whitePlayerUserId: string;
+    blackPlayerUserId: string;
+  }) => void;
+
   setFen: (fen: string) => void;
   setColor: (color: "white" | "black") => void;
 
@@ -51,6 +58,8 @@ export const useGameStore = create<GameStoreState>((set) => ({
   color: null,
 
   userId: null,
+  whitePlayerUserId: null,
+  blackPlayerUserId: null,
 
   setGameInfo: (data) => {
     console.log("🛠️ setGameInfo called with:", data);
@@ -76,6 +85,10 @@ export const useGameStore = create<GameStoreState>((set) => ({
       roomId: data.roomId,
       timeControl: data.timeControl,
     });
+  },
+
+  setPlayerUserIds: ({ whitePlayerUserId, blackPlayerUserId }) => {
+    set({ whitePlayerUserId, blackPlayerUserId });
   },
 
   setFen: (fen) => set({ fen }),

@@ -1,3 +1,4 @@
+// (unchanged imports)
 import { WebSocketServer } from "ws";
 import { createServer } from "http";
 import {
@@ -111,6 +112,12 @@ wss.on("connection", (socket) => {
                   room.players.find((p) => p.color === "black")?.name ||
                   "Black",
                 timeControl: game.timeControl,
+                whitePlayerUserId:
+                  room.players.find((p) => p.color === "white")?.userId ||
+                  "White",
+                blackPlayerUserId:
+                  room.players.find((p) => p.color === "black")?.userId ||
+                  "Black",
               })
             );
           });
@@ -242,6 +249,8 @@ wss.on("connection", (socket) => {
           whiteName: whitePlayer?.name || "White",
           blackName: blackPlayer?.name || "Black",
           timeControl: room.timeControl,
+          whitePlayerUserId: whitePlayer?.userId || "White",
+          blackPlayerUserId: blackPlayer?.userId || "Black",
         });
         break;
       }

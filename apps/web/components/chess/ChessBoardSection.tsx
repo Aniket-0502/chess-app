@@ -20,6 +20,8 @@ export default function ChessBoardSection() {
     color,
     setColor,
     userId,
+    whitePlayerUserId,
+    blackPlayerUserId,
   } = useGameStore();
   const { socket } = useSocketStore();
 
@@ -28,21 +30,23 @@ export default function ChessBoardSection() {
     black: timeControl?.time || 600,
   });
 
-  // Identify user's color based on userId
+  // ✅ Accurate board orientation based on userId match
   const myColor =
-    userId === player1
-      ? player1Color
-      : userId === player2
-        ? player2Color
+    userId === whitePlayerUserId
+      ? "white"
+      : userId === blackPlayerUserId
+        ? "black"
         : null;
 
   // 🧠 Debug logs
   console.log("📛 userId:", userId);
-  console.log("🧑 player1:", player1, "→", player1Color);
-  console.log("🧑 player2:", player2, "→", player2Color);
-  console.log("🎯 myColor (based on userId):", myColor);
-  console.log("♟️ color from game_start:", color);
+  console.log("👤 whitePlayerUserId:", whitePlayerUserId);
+  console.log("👤 blackPlayerUserId:", blackPlayerUserId);
+  console.log("🎯 Calculated myColor from userId match:", myColor);
+  console.log("♟️ color from game_start (for move validation):", color);
   console.log("📌 Final boardOrientation to use:", myColor ?? "white");
+  console.log("📍 player1:", player1, "→", player1Color);
+  console.log("📍 player2:", player2, "→", player2Color);
 
   useEffect(() => {
     if (!socket) return;
@@ -52,7 +56,7 @@ export default function ChessBoardSection() {
       console.log("📩 WS Message:", message);
 
       if (message.type === "game_start") {
-        console.log("🚀 game_start color set to:", message.color);
+        console.log("🚀 game_start received → color:", message.color);
         setFen(message.fen);
         setColor(message.color);
         setPlayerTimes({
@@ -62,6 +66,7 @@ export default function ChessBoardSection() {
       }
 
       if (message.type === "move_made") {
+        console.log("🎯 move_made received");
         setFen(message.fen);
         setPlayerTimes(message.remainingTime);
         chess.load(message.fen); // update internal game state
@@ -110,13 +115,19 @@ export default function ChessBoardSection() {
   const whiteName = player1Color === "white" ? player1 : player2;
   const blackName = player1Color === "black" ? player1 : player2;
 
+  const topName = myColor === "white" ? blackName : whiteName;
+  const bottomName = myColor === "white" ? whiteName : blackName;
+  const topColor = myColor === "white" ? "black" : "white";
+
   return (
     <div className="flex flex-col items-center gap-2">
       {/* Top player info */}
       <div className="flex items-center justify-between w-[460px] mb-2">
-        <span className="text-white text-sm font-medium">{blackName}</span>
+        <span className="text-white text-sm font-medium">{topName}</span>
         <div className="bg-white text-black px-3 py-1 rounded-md font-bold text-sm">
-          {formatTime(playerTimes.black)}
+          {formatTime(
+            topColor === "white" ? playerTimes.black : playerTimes.white
+          )}
         </div>
       </div>
 
@@ -124,7 +135,7 @@ export default function ChessBoardSection() {
       <Chessboard
         position={fen}
         onPieceDrop={onDrop}
-        boardOrientation={myColor ?? "white"} // 👈 Use derived myColor here
+        boardOrientation={myColor ?? "white"} // 👈 Orientation based on user identity
         customBoardStyle={{
           borderRadius: "0.75rem",
           boxShadow: "0 0 0 1px rgba(255, 255, 255, 0.1)",
@@ -134,9 +145,11 @@ export default function ChessBoardSection() {
 
       {/* Bottom player info */}
       <div className="flex items-center justify-between w-[460px] mt-2">
-        <span className="text-white text-sm font-medium">{whiteName}</span>
+        <span className="text-white text-sm font-medium">{bottomName}</span>
         <div className="bg-white text-black px-3 py-1 rounded-md font-bold text-sm">
-          {formatTime(playerTimes.white)}
+          {formatTime(
+            topColor === "white" ? playerTimes.white : playerTimes.black
+          )}
         </div>
       </div>
     </div>
