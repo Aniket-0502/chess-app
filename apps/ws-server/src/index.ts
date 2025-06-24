@@ -1,4 +1,3 @@
-// (unchanged imports)
 import { WebSocketServer } from "ws";
 import { createServer } from "http";
 import {
@@ -174,9 +173,10 @@ wss.on("connection", (socket) => {
           roomId,
           parsed.from,
           parsed.to,
-          parsed.promotion,
+          parsed.promotion ?? undefined, // ✅ only pass promotion if available
           player.color
         );
+
         if (!result.valid) {
           if (result.timedOut) {
             getAllSocketsInRoom(roomId).forEach((s) =>
