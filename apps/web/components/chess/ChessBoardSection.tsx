@@ -31,7 +31,10 @@ export default function ChessBoardSection() {
     userId,
     whitePlayerUserId,
     blackPlayerUserId,
+    setHistory,
+    addMoveToHistory,
   } = useGameStore();
+
   const { socket } = useSocketStore();
 
   const [playerTimes, setPlayerTimes] = useState({
@@ -69,6 +72,7 @@ export default function ChessBoardSection() {
         });
         setGameOverInfo(null);
         setIsDialogOpen(false);
+        setHistory([]); // 🔁 clear move history at game start
         chess.load(message.fen);
       }
 
@@ -77,6 +81,7 @@ export default function ChessBoardSection() {
         chess.load(message.fen);
         setPlayerTimes(message.remainingTime);
         setLastMoveSquares([message.move.from, message.move.to]);
+        addMoveToHistory(message.move.san); // ✅ Add to history
 
         if (chess.isGameOver()) {
           let winner = chess.turn() === "w" ? "black" : "white";
@@ -194,7 +199,6 @@ export default function ChessBoardSection() {
     });
   }
 
-  // Highlight king in red when in check
   if (chess.inCheck()) {
     const board = chess.board();
     for (let rank = 0; rank < 8; rank++) {

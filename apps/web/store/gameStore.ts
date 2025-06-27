@@ -15,6 +15,8 @@ interface GameStoreState {
   whitePlayerUserId: string | null;
   blackPlayerUserId: string | null;
 
+  history: string[]; // ✅ move history for MoveHistory
+
   setGameInfo: (data: {
     player1: string;
     player2: string;
@@ -42,8 +44,10 @@ interface GameStoreState {
 
   setFen: (fen: string) => void;
   setColor: (color: "white" | "black") => void;
-
   setUserId: (id: string) => void;
+
+  setHistory: (history: string[]) => void;
+  addMoveToHistory: (move: string) => void;
 }
 
 export const useGameStore = create<GameStoreState>((set) => ({
@@ -60,6 +64,8 @@ export const useGameStore = create<GameStoreState>((set) => ({
   userId: null,
   whitePlayerUserId: null,
   blackPlayerUserId: null,
+
+  history: [], // ✅ initially empty move history
 
   setGameInfo: (data) => {
     console.log("🛠️ setGameInfo called with:", data);
@@ -94,4 +100,8 @@ export const useGameStore = create<GameStoreState>((set) => ({
   setFen: (fen) => set({ fen }),
   setColor: (color) => set({ color }),
   setUserId: (id) => set({ userId: id }),
+
+  setHistory: (history) => set({ history }),
+  addMoveToHistory: (move) =>
+    set((state) => ({ history: [...state.history, move] })),
 }));
