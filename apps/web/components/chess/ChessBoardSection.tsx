@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { Chess } from "chess.js";
 import { Chessboard } from "react-chessboard";
 import { useGameStore } from "../../store/gameStore";
@@ -45,9 +45,6 @@ export default function ChessBoardSection() {
     reason: string;
   } | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const animationFrameRef = useRef<number | null>(null);
-  const lastUpdateTimeRef = useRef<number | null>(null);
-  const [isClockRunning, setIsClockRunning] = useState(false);
 
   const myColor =
     userId === whitePlayerUserId
@@ -55,36 +52,6 @@ export default function ChessBoardSection() {
       : userId === blackPlayerUserId
         ? "black"
         : null;
-
-  useEffect(() => {
-    const tick = (timestamp: number) => {
-      if (!isClockRunning || !lastUpdateTimeRef.current) {
-        lastUpdateTimeRef.current = timestamp;
-        animationFrameRef.current = requestAnimationFrame(tick);
-        return;
-      }
-
-      const delta = (timestamp - lastUpdateTimeRef.current) / 1000;
-      lastUpdateTimeRef.current = timestamp;
-
-      const currentTurn = chess.turn() === "w" ? "white" : "black";
-
-      setPlayerTimes((prev) => {
-        const updated = { ...prev };
-        updated[currentTurn] = Math.max(prev[currentTurn] - delta, 0);
-        return updated;
-      });
-
-      animationFrameRef.current = requestAnimationFrame(tick);
-    };
-
-    animationFrameRef.current = requestAnimationFrame(tick);
-    return () => {
-      if (animationFrameRef.current !== null) {
-        cancelAnimationFrame(animationFrameRef.current);
-      }
-    };
-  }, [isClockRunning]);
 
   useEffect(() => {
     if (!socket) return;
@@ -100,7 +67,6 @@ export default function ChessBoardSection() {
           white: message.timeControl.time,
           black: message.timeControl.time,
         });
-        setIsClockRunning(false);
         setGameOverInfo(null);
         setIsDialogOpen(false);
         chess.load(message.fen);
@@ -111,15 +77,17 @@ export default function ChessBoardSection() {
         chess.load(message.fen);
         setPlayerTimes(message.remainingTime);
         setLastMoveSquares([message.move.from, message.move.to]);
-        setIsClockRunning(true);
 
         if (chess.isGameOver()) {
           let winner = chess.turn() === "w" ? "black" : "white";
           let reason = chess.isCheckmate() ? "Checkmate" : "Draw";
           setGameOverInfo({ winner, reason });
           setIsDialogOpen(true);
-          setIsClockRunning(false);
         }
+      }
+
+      if (message.type === "clock_tick") {
+        setPlayerTimes(message.remainingTime);
       }
 
       if (message.type === "error") {

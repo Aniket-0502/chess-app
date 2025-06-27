@@ -144,10 +144,17 @@ export type ServerMessage =
       whiteName?: string;
       blackName?: string;
       timeControl?: TimeControl;
-      whitePlayerUserId?: string; // ✅ NEW
-      blackPlayerUserId?: string; // ✅ NEW
+      whitePlayerUserId?: string;
+      blackPlayerUserId?: string;
     }
   | {
       type: "error";
       message: string;
+    }
+  | {
+      type: "clock_tick"; // ✅ NEW
+      remainingTime: {
+        white: number;
+        black: number;
+      };
     };

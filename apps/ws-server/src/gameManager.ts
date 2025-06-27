@@ -102,16 +102,19 @@ export function makeMove(
     const move = game.chess.move({ from, to, promotion: promotion || "q" });
     if (!move) return { valid: false, reason: "Illegal move" };
 
-    // Start the clock only after white's first move
     if (
       !game.timeoutHandle &&
       game.history.length === 0 &&
       move.color === "w"
     ) {
       startClock(game);
+
+      // ✅ CLOCK INTERVAL STARTS
       game.timeoutHandle = setInterval(() => {
+        if (game.gameOver) return;
+
         const timeoutColor = checkTimeOut(game);
-        if (timeoutColor && !game.gameOver) {
+        if (timeoutColor) {
           console.log(`[timeout] ${timeoutColor} lost on time`);
 
           game.gameOver = true;
@@ -127,6 +130,17 @@ export function makeMove(
             )
           );
           const result = resignGame(roomId, timeoutColor);
+        } else {
+          const remainingTime = getRemainingTime(game);
+          const sockets = getAllSocketsInRoom(roomId);
+          sockets.forEach((s) =>
+            s.send(
+              JSON.stringify({
+                type: "clock_tick",
+                remainingTime,
+              })
+            )
+          );
         }
       }, 1000);
     } else {
