@@ -84,9 +84,9 @@ export default function GameInfoPanel() {
   }
 
   return (
-    <div className="flex flex-col gap-4 items-center bg-[#0F172B] border border-white/10 rounded-xl px-6 py-4 w-[340px] text-white shadow-lg">
+    <div className="flex flex-col gap-8 items-center bg-black border border-white/10 rounded-xl px-6 py-4 w-[340px] h-[450px] text-white shadow-lg">
       {/* Room Code with Copy */}
-      <div className="flex justify-between items-center w-full bg-[#1D293D] px-4 py-3 rounded-lg relative">
+      <div className="flex justify-between items-center w-full bg-[#1D1D1D] px-4 py-3 rounded-lg relative h-[74px]">
         <span className="text-[15px] tracking-wide font-medium">
           Room Code : {roomId}
         </span>
@@ -105,61 +105,61 @@ export default function GameInfoPanel() {
           </div>
         )}
       </div>
-
-      {/* Player 1 */}
-      <div className="flex items-center w-full gap-3 bg-[#1D293D] px-4 py-3 rounded-lg">
-        <Image
-          src="/whitePlayerPhoto.svg"
-          alt="White Player"
-          width={20}
-          height={20}
-        />
-        <span className="text-sm">
-          {player1} <span className="text-gray-400">(White)</span>
-        </span>
-      </div>
-
-      {/* Player 2 */}
-      <div className="flex items-center w-full gap-3 bg-[#1D293D] px-4 py-3 rounded-lg">
-        <Image
-          src="/blackPlayerPhoto.svg"
-          alt="Black Player"
-          width={20}
-          height={20}
-        />
-        <span className="text-sm">
-          {player2} <span className="text-gray-400">(Black)</span>
-        </span>
-      </div>
-
-      {/* Time Control */}
-      <div className="flex items-center w-full gap-3 bg-[#1D293D] px-4 py-3 rounded-lg">
-        <Image
-          src="/timeControlPhoto.svg"
-          alt="Time Control"
-          width={20}
-          height={20}
-        />
-        <span className="text-sm">
-          Time Control :{" "}
-          <span className="text-white font-medium">
-            {timeControl.time / 60}+{timeControl.increment || 0}
+      <div className="flex flex-col justify-between items-center w-full h-[240px] bg-[#1D1D1D] px-4 py-3 rounded-lg relative">
+        {/* Player 1 */}
+        <div className="flex items-center w-full gap-3 bg-[#1D1D1D] px-4 py-3 rounded-lg">
+          <Image
+            src="/whitePlayerPhoto.svg"
+            alt="White Player"
+            width={20}
+            height={20}
+          />
+          <span className="text-md">
+            {player1} <span className="text-gray-400">(White)</span>
           </span>
-          {"  "}
-          <span className="text-gray-400 text-xs ml-1">
-            (
-            {timeControl.time >= 600
-              ? "Classical"
-              : timeControl.time >= 300
-                ? "Rapid"
-                : "Blitz"}
-            )
-          </span>
-        </span>
-      </div>
+        </div>
 
+        {/* Player 2 */}
+        <div className="flex items-center w-full gap-3 bg-[#1D1D1D] px-4 py-3 rounded-lg">
+          <Image
+            src="/blackPlayerPhoto.svg"
+            alt="Black Player"
+            width={20}
+            height={20}
+          />
+          <span className="text-md">
+            {player2} <span className="text-gray-400">(Black)</span>
+          </span>
+        </div>
+
+        {/* Time Control */}
+        <div className="flex items-center w-full gap-3 bg-[#1D1D1D] px-4 py-3 rounded-lg">
+          <Image
+            src="/timeControlPhoto.svg"
+            alt="Time Control"
+            width={20}
+            height={20}
+          />
+          <span className="text-md">
+            Time Control :{" "}
+            <span className="text-white font-medium">
+              {timeControl.time / 60}+{timeControl.increment || 0}
+            </span>
+            {"  "}
+            <span className="text-gray-400 text-sm ml-1">
+              (
+              {timeControl.time >= 600
+                ? "Classical"
+                : timeControl.time >= 300
+                  ? "Rapid"
+                  : "Blitz"}
+              )
+            </span>
+          </span>
+        </div>
+      </div>
       {/* Your Turn To Play */}
-      <div className="w-full bg-[#1D293D] text-center py-3 rounded-lg text-[17px] font-bold mt-2">
+      <div className="w-full bg-[#1D1D1D] text-center py-3 rounded-lg text-[17px] font-bold mt-2">
         Your Turn To Play
       </div>
     </div>

@@ -19,14 +19,14 @@ export default function PlayPage() {
   }, []);
 
   return (
-    <div className="flex flex-col h-screen w-full bg-[#0F172B] text-white">
+    <div className="flex flex-col h-screen w-full bg-black text-white">
       {/* Header */}
       <Header />
 
       {/* Main Content */}
       <div className="flex flex-1 overflow-hidden">
         {/* Left Panel: Game Info */}
-        <div className="w-[260px] border-r border-white/5 p-4 overflow-y-auto">
+        <div className="w-[430px] p-4 flex flex-col justify-center items-center border-r border-white/5">
           <GameInfoPanel />
         </div>
 
@@ -36,11 +36,11 @@ export default function PlayPage() {
         </div>
 
         {/* Right Panel: Move History + Game Actions */}
-        <div className="w-[320px] border-l border-white/5 p-4 flex flex-col justify-between">
-          <div className="flex-1 overflow-y-auto">
+        <div className="w-[350px] border-l border-white/5 p-4 flex flex-col justify-between items-center">
+          <div className="w-[330px] flex-1 overflow-y-auto">
             <MoveHistory />
           </div>
-          <div className="mt-4">
+          <div className="w-[330px] border-l border-white/5 p-4">
             <GameActions />
           </div>
         </div>

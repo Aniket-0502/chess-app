@@ -12,7 +12,7 @@ export default function MoveHistory() {
   }
 
   return (
-    <div className="bg-[#1e1e2f] text-white p-4 rounded-lg w-full max-w-[320px] border border-white/10 shadow-lg">
+    <div className="bg-[#1e1e2f] text-white p-4 rounded-lg w-full max-w-[320px] h-[450px] border border-white/10 shadow-lg">
       <h2 className="text-xl font-semibold text-center mb-3">Moves</h2>
       <div className="grid grid-cols-3 text-sm font-medium border-b border-white/20 pb-2">
         <div className="text-center">#</div>

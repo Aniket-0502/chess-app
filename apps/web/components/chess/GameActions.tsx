@@ -70,7 +70,7 @@ export default function GameActions() {
   }, [socket]);
 
   return (
-    <div className="flex gap-4 mt-4">
+    <div className="flex justify-center items-center gap-8">
       <Button variant="secondary" onClick={handleDrawOffer}>
         Offer Draw
       </Button>
