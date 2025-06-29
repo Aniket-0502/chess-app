@@ -57,11 +57,7 @@ export default function GameSetupCard() {
           return;
         }
 
-        if (message.type === "room_created") {
-          router.push("/play");
-        }
-
-        if (message.type === "joined") {
+        if (message.type === "room_created" || message.type === "joined") {
           newSocket.send(JSON.stringify({ type: "status_check" }));
           router.push("/play");
         }
@@ -71,8 +67,6 @@ export default function GameSetupCard() {
             whitePlayerUserId: message.players.white,
             blackPlayerUserId: message.players.black,
           });
-
-          console.log("✅ setPlayerUserIds from status:", message.players);
         }
 
         console.log("[WS] Message from server:", message);
@@ -123,8 +117,6 @@ export default function GameSetupCard() {
         timeControl: parsed,
       });
 
-      console.log("🟩 Sending create with name:", createName);
-
       socket.send(
         JSON.stringify({
           type: "create",
@@ -159,8 +151,6 @@ export default function GameSetupCard() {
         timeControl: { time: 0, increment: 0 },
       });
 
-      console.log("🟦 Sending join with name:", joinName);
-
       socket.send(
         JSON.stringify({
           type: "join",
@@ -173,21 +163,21 @@ export default function GameSetupCard() {
   };
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-5 px-6 w-full max-w-5xl mx-auto mb-10">
+    <div className="flex flex-col md:flex-row gap-6 px-4 md:px-6 w-full max-w-6xl mx-auto mb-10">
       {/* CREATE GAME CARD */}
-      <Card className="text-white h-[540px] border-white/5 bg-linear-to-b from-[#0F172B] to-[#1D293D]">
-        <CardContent className="space-y-2 pt-6">
-          <div className="flex flex-col items-center">
-            <h2 className="text-[25px] font-bold text-center font-poppins">
+      <Card className="text-white min-h-[540px] flex-1 border-white/5 bg-gradient-to-b from-[#0F172B] to-[#1D293D]">
+        <CardContent className="space-y-4 pt-6">
+          <div className="flex flex-col items-center text-center">
+            <h2 className="text-[22px] sm:text-[25px] font-bold font-poppins">
               Create Game
             </h2>
-            <div className="mt-5 text-[#99A1AF] text-center text-[15px] font-medium w-[340px]">
+            <div className="mt-3 text-[#99A1AF] text-[14px] max-w-xs mx-auto font-medium">
               Set up a game and share the code with your opponent
             </div>
           </div>
-          <div className="flex flex-col gap-6 mt-10">
-            <div className="space-y-2 gap-4">
-              <Label htmlFor="name" className="flex">
+          <div className="flex flex-col gap-6 mt-6">
+            <div className="space-y-2">
+              <Label htmlFor="name" className="flex items-center">
                 <Image
                   src="/personIcon.svg"
                   alt="User Icon"
@@ -195,7 +185,7 @@ export default function GameSetupCard() {
                   height={20}
                   className="mr-2"
                 />
-                <div>Name</div>
+                Name
               </Label>
               <Input
                 id="name"
@@ -205,14 +195,14 @@ export default function GameSetupCard() {
                 onChange={(e) => setCreateName(e.target.value)}
                 className={`w-full px-3 py-2 text-sm border rounded-md ${
                   errors.createName
-                    ? "border-red-500 focus:border-red-500 focus:ring-red-500"
+                    ? "border-red-500 focus:border-red-500"
                     : "border-white/10"
                 }`}
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="color" className="flex">
+              <Label htmlFor="color" className="flex items-center">
                 <Image
                   src="/controllerIcon.svg"
                   alt="Controller Icon"
@@ -220,11 +210,11 @@ export default function GameSetupCard() {
                   height={20}
                   className="mr-2"
                 />
-                <div>Play As</div>
+                Play As
               </Label>
               <Select value={createColor} onValueChange={setCreateColor}>
                 <SelectTrigger
-                  className={`w-full rounded-md px-3 py-2 text-sm flex justify-between items-center ${
+                  className={`w-full rounded-md px-3 py-2 text-sm ${
                     errors.createColor
                       ? "border-red-500 focus:ring-red-500"
                       : "border-white/10 border"
@@ -241,7 +231,7 @@ export default function GameSetupCard() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="time" className="flex">
+              <Label htmlFor="time" className="flex items-center">
                 <Image
                   src="/clockIcon.svg"
                   alt="Clock Icon"
@@ -249,11 +239,11 @@ export default function GameSetupCard() {
                   height={20}
                   className="mr-2"
                 />
-                <div>Time Control</div>
+                Time Control
               </Label>
               <Select value={createTime} onValueChange={setCreateTime}>
                 <SelectTrigger
-                  className={`w-full rounded-md px-3 py-2 text-sm flex justify-between items-center ${
+                  className={`w-full rounded-md px-3 py-2 text-sm ${
                     errors.createTime
                       ? "border-red-500 focus:ring-red-500"
                       : "border-white/10 border"
@@ -282,7 +272,7 @@ export default function GameSetupCard() {
           </div>
           <Button
             onClick={validateCreate}
-            className="w-full mt-5 h-[58px] bg-[#8E51FF] font-semibold font-poppins text-[20px] hover:bg-[#7a3ed6] transition-colors duration-200"
+            className="w-full mt-5 h-[52px] bg-[#8E51FF] font-semibold font-poppins text-[18px] hover:bg-[#7a3ed6]"
           >
             Create & Get Code
           </Button>
@@ -290,19 +280,19 @@ export default function GameSetupCard() {
       </Card>
 
       {/* JOIN GAME CARD */}
-      <Card className="text-white h-[540px] border-white/5 bg-linear-to-b from-[#0F172B] to-[#1D293D]">
-        <CardContent className="space-y-2 pt-6">
-          <div className="flex flex-col items-center">
-            <h2 className="text-[25px] font-bold text-center font-poppins">
+      <Card className="text-white min-h-[540px] flex-1 border-white/5 bg-gradient-to-b from-[#0F172B] to-[#1D293D]">
+        <CardContent className="space-y-4 pt-6">
+          <div className="flex flex-col items-center text-center">
+            <h2 className="text-[22px] sm:text-[25px] font-bold font-poppins">
               Join Game
             </h2>
-            <div className="mt-5 text-[#99A1AF] text-center text-[15px] font-medium w-[340px]">
+            <div className="mt-3 text-[#99A1AF] text-[14px] max-w-xs mx-auto font-medium">
               Enter your name and room ID shared by your opponent
             </div>
           </div>
-          <div className="flex flex-col gap-6 justify-around mt-10">
-            <div className="space-y-2 gap-4">
-              <Label htmlFor="join-name" className="flex">
+          <div className="flex flex-col gap-6 mt-6">
+            <div className="space-y-2">
+              <Label htmlFor="join-name" className="flex items-center">
                 <Image
                   src="/personIcon.svg"
                   alt="User Icon"
@@ -310,7 +300,7 @@ export default function GameSetupCard() {
                   height={20}
                   className="mr-2"
                 />
-                <div>Name</div>
+                Name
               </Label>
               <Input
                 id="join-name"
@@ -320,14 +310,14 @@ export default function GameSetupCard() {
                 onChange={(e) => setJoinName(e.target.value)}
                 className={`w-full px-3 py-2 text-sm border rounded-md ${
                   errors.joinName
-                    ? "border-red-500 focus:border-red-500 focus:ring-red-500"
+                    ? "border-red-500 focus:border-red-500"
                     : "border-white/10"
                 }`}
               />
             </div>
 
-            <div className="mt-4 space-y-2 gap-4">
-              <Label htmlFor="room-id" className="flex">
+            <div className="space-y-2">
+              <Label htmlFor="room-id" className="flex items-center">
                 <Image
                   src="/trophy.svg"
                   alt="Room Icon"
@@ -335,7 +325,7 @@ export default function GameSetupCard() {
                   height={20}
                   className="mr-2"
                 />
-                <div>Room ID</div>
+                Room ID
               </Label>
               <Input
                 id="room-id"
@@ -344,18 +334,18 @@ export default function GameSetupCard() {
                 onChange={(e) => setRoomId(e.target.value)}
                 className={`tracking-[0.23em] px-3 py-2 text-sm border rounded-md ${
                   errors.roomId
-                    ? "border-red-500 focus:border-red-500 focus:ring-red-500"
+                    ? "border-red-500 focus:border-red-500"
                     : "border-white/10"
                 }`}
               />
-              <div className="mt-2 text-[#99A1AF] text-center text-[11px] font-medium font-poppins">
+              <div className="text-[#99A1AF] text-[11px] text-center font-medium font-poppins">
                 Ask your opponent for the game code they received
               </div>
             </div>
           </div>
           <Button
             onClick={validateJoin}
-            className="w-full mt-17 h-[58px] bg-[#00C950] font-semibold font-poppins text-[20px] hover:bg-[#00B347] transition-colors duration-200"
+            className="w-full mt-5 h-[52px] bg-[#00C950] font-semibold font-poppins text-[18px] hover:bg-[#00B347]"
           >
             Join Game
           </Button>

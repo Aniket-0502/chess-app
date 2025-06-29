@@ -47,6 +47,8 @@ export function createGame(
   return game;
 }
 
+// ✂️ ... same imports and game map as before
+
 export function makeMove(
   roomId: string,
   from: string,
@@ -63,6 +65,8 @@ export function makeMove(
   history?: string[];
   timedOut?: boolean;
   winner?: "white" | "black";
+  draw?: boolean;
+  drawReason?: "threefold" | "insufficient" | "stalemate" | "fiftyMove";
 } {
   const game = games.get(roomId);
   if (!game) {
@@ -108,15 +112,12 @@ export function makeMove(
       move.color === "w"
     ) {
       startClock(game);
-
-      // ✅ CLOCK INTERVAL STARTS
       game.timeoutHandle = setInterval(() => {
         if (game.gameOver) return;
 
         const timeoutColor = checkTimeOut(game);
         if (timeoutColor) {
           console.log(`[timeout] ${timeoutColor} lost on time`);
-
           game.gameOver = true;
           clearInterval(game.timeoutHandle);
           const sockets = getAllSocketsInRoom(roomId);
@@ -129,7 +130,7 @@ export function makeMove(
               })
             )
           );
-          const result = resignGame(roomId, timeoutColor);
+          resignGame(roomId, timeoutColor);
         } else {
           const remainingTime = getRemainingTime(game);
           const sockets = getAllSocketsInRoom(roomId);
@@ -148,14 +149,48 @@ export function makeMove(
     }
 
     game.currentTurn = game.chess.turn();
-    game.gameOver = game.chess.isGameOver();
     game.history.push(`${move.from}${move.to}${move.promotion || ""}`);
+
+    // 🔍 DRAW CHECK SECTION
+    let drawReason:
+      | "threefold"
+      | "insufficient"
+      | "stalemate"
+      | "fiftyMove"
+      | null = null;
+
+    if (game.chess.isThreefoldRepetition()) {
+      drawReason = "threefold";
+    } else if (game.chess.isInsufficientMaterial()) {
+      drawReason = "insufficient";
+    } else if (game.chess.isStalemate()) {
+      drawReason = "stalemate";
+    } else if (game.chess.isDrawByFiftyMoves()) {
+      drawReason = "fiftyMove";
+    }
+
+    console.log("Current state of drawReason:", drawReason);
+
+    if (drawReason) {
+      game.gameOver = true;
+      if (game.timeoutHandle) clearInterval(game.timeoutHandle);
+      return {
+        valid: true,
+        move,
+        gameOver: true,
+        draw: true,
+        drawReason,
+        fen: game.chess.fen(),
+        remainingTime: getRemainingTime(game),
+        history: game.history,
+      };
+    }
 
     const remaining = getRemainingTime(game);
     return {
       valid: true,
       move,
-      gameOver: game.gameOver,
+      gameOver: false,
       fen: game.chess.fen(),
       remainingTime: remaining,
       history: game.history,

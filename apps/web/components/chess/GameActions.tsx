@@ -1,3 +1,5 @@
+// components/chess/GameActions.tsx
+
 "use client";
 
 import { useEffect, useState } from "react";
@@ -15,7 +17,7 @@ import {
 
 export default function GameActions() {
   const { socket } = useSocketStore();
-  const { color, userId } = useGameStore();
+  const { color } = useGameStore();
 
   const [drawOfferedByOpponent, setDrawOfferedByOpponent] = useState(false);
   const [gameOverInfo, setGameOverInfo] = useState<{
@@ -70,11 +72,19 @@ export default function GameActions() {
   }, [socket]);
 
   return (
-    <div className="flex justify-center items-center gap-8">
-      <Button variant="secondary" onClick={handleDrawOffer}>
+    <div className="flex flex-col sm:flex-row justify-center items-center gap-4 w-full">
+      <Button
+        variant="secondary"
+        onClick={handleDrawOffer}
+        className="w-full sm:w-auto"
+      >
         Offer Draw
       </Button>
-      <Button variant="destructive" onClick={handleResign}>
+      <Button
+        variant="destructive"
+        onClick={handleResign}
+        className="w-full sm:w-auto"
+      >
         Resign
       </Button>
 
@@ -117,7 +127,11 @@ export default function GameActions() {
               {gameOverInfo?.reason === "draw"
                 ? "The game has ended in a draw."
                 : gameOverInfo?.reason === "resign"
-                  ? `The game has ended because ${gameOverInfo.winner === color ? "your opponent resigned." : "you resigned."}`
+                  ? `The game has ended because ${
+                      gameOverInfo.winner === color
+                        ? "your opponent resigned."
+                        : "you resigned."
+                    }`
                   : null}
             </DialogDescription>
           </DialogHeader>

@@ -44,10 +44,12 @@ export default function ChessBoardSection() {
 
   const [lastMoveSquares, setLastMoveSquares] = useState<string[]>([]);
   const [gameOverInfo, setGameOverInfo] = useState<{
-    winner: string;
+    winner?: string;
     reason: string;
+    drawReason?: string;
   } | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [boardWidth, setBoardWidth] = useState(460);
 
   const myColor =
     userId === whitePlayerUserId
@@ -56,12 +58,27 @@ export default function ChessBoardSection() {
         ? "black"
         : null;
 
+  // Responsive Chessboard width
+  useEffect(() => {
+    const updateSize = () => {
+      const width = window.innerWidth;
+      if (width < 400) setBoardWidth(300);
+      else if (width < 640) setBoardWidth(340);
+      else if (width < 768) setBoardWidth(380);
+      else if (width < 1024) setBoardWidth(420);
+      else setBoardWidth(460);
+    };
+
+    updateSize();
+    window.addEventListener("resize", updateSize);
+    return () => window.removeEventListener("resize", updateSize);
+  }, []);
+
   useEffect(() => {
     if (!socket) return;
 
     const handleMessage = (event: MessageEvent) => {
       const message = JSON.parse(event.data);
-      console.log("📩 WS Message:", message);
 
       if (message.type === "game_start") {
         setFen(message.fen);
@@ -72,7 +89,7 @@ export default function ChessBoardSection() {
         });
         setGameOverInfo(null);
         setIsDialogOpen(false);
-        setHistory([]); // 🔁 clear move history at game start
+        setHistory([]);
         chess.load(message.fen);
       }
 
@@ -81,18 +98,31 @@ export default function ChessBoardSection() {
         chess.load(message.fen);
         setPlayerTimes(message.remainingTime);
         setLastMoveSquares([message.move.from, message.move.to]);
-        addMoveToHistory(message.move.san); // ✅ Add to history
-
-        if (chess.isGameOver()) {
-          let winner = chess.turn() === "w" ? "black" : "white";
-          let reason = chess.isCheckmate() ? "Checkmate" : "Draw";
-          setGameOverInfo({ winner, reason });
-          setIsDialogOpen(true);
-        }
+        addMoveToHistory(message.move.san);
       }
 
       if (message.type === "clock_tick") {
         setPlayerTimes(message.remainingTime);
+      }
+
+      if (message.type === "game_over") {
+        if (message.reason === "draw") {
+          setGameOverInfo({
+            reason: "Draw",
+            drawReason: message.drawReason,
+          });
+        } else {
+          setGameOverInfo({
+            reason:
+              message.reason === "checkmate"
+                ? "Checkmate"
+                : message.reason === "resign"
+                  ? "Resignation"
+                  : "Timeout",
+            winner: message.winner,
+          });
+        }
+        setIsDialogOpen(true);
       }
 
       if (message.type === "error") {
@@ -111,10 +141,7 @@ export default function ChessBoardSection() {
       ((piece === "P" && targetSquare[1] === "8") ||
         (piece === "p" && targetSquare[1] === "1"));
 
-    if (isPromotion) {
-      return false;
-    }
-
+    if (isPromotion) return false;
     sendMove(sourceSquare, targetSquare);
     return true;
   }
@@ -216,10 +243,25 @@ export default function ChessBoardSection() {
     }
   }
 
+  const getDrawDescription = (reason?: string) => {
+    switch (reason) {
+      case "threefold":
+        return "Draw by threefold repetition.";
+      case "stalemate":
+        return "Draw by stalemate.";
+      case "insufficient":
+        return "Draw due to insufficient material.";
+      case "fiftyMove":
+        return "Draw by fifty-move rule.";
+      default:
+        return "The game ended in a draw.";
+    }
+  };
+
   return (
-    <div className="flex flex-col items-center gap-2">
+    <div className="flex flex-col items-center gap-2 w-full px-4">
       {/* Top Player */}
-      <div className="flex items-center justify-between w-[460px] mb-2">
+      <div className="flex items-center justify-between w-full max-w-[480px] mb-2">
         <span className="text-white text-sm font-medium">{topName}</span>
         <div className="bg-white text-black px-3 py-1 rounded-md font-bold text-sm">
           {formatTime(
@@ -241,14 +283,14 @@ export default function ChessBoardSection() {
           borderRadius: "0.75rem",
           boxShadow: "0 0 0 1px rgba(255, 255, 255, 0.1)",
         }}
-        boardWidth={460}
+        boardWidth={boardWidth}
         customDarkSquareStyle={{ backgroundColor: "#252c58" }}
         customLightSquareStyle={{ backgroundColor: "#9793dd" }}
         customSquareStyles={squareStyles}
       />
 
       {/* Bottom Player */}
-      <div className="flex items-center justify-between w-[460px] mt-2">
+      <div className="flex items-center justify-between w-full max-w-[480px] mt-2">
         <span className="text-white text-sm font-medium">{bottomName}</span>
         <div className="bg-white text-black px-3 py-1 rounded-md font-bold text-sm">
           {formatTime(
@@ -269,7 +311,7 @@ export default function ChessBoardSection() {
             </DialogTitle>
             <DialogDescription className="text-lg mt-2">
               {gameOverInfo?.reason === "Draw"
-                ? "The game ended in a draw."
+                ? getDrawDescription(gameOverInfo.drawReason)
                 : `${gameOverInfo?.winner} wins the game.`}
             </DialogDescription>
           </DialogHeader>

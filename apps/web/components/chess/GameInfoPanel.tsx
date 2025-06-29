@@ -14,6 +14,10 @@ export default function GameInfoPanel() {
     player2Color,
     timeControl,
     setGameInfo,
+    history,
+    userId,
+    whitePlayerUserId,
+    blackPlayerUserId,
   } = useGameStore();
   const { socket } = useSocketStore();
 
@@ -65,6 +69,19 @@ export default function GameInfoPanel() {
     setTimeout(() => setCopied(false), 2000);
   };
 
+  // Determine if it's the user's turn
+  const isMyTurn = (() => {
+    const moveCount = history.length;
+    const currentTurn = moveCount % 2 === 0 ? "white" : "black";
+    const myColor =
+      userId === whitePlayerUserId
+        ? "white"
+        : userId === blackPlayerUserId
+          ? "black"
+          : null;
+    return currentTurn === myColor;
+  })();
+
   if (
     loading ||
     !player1 ||
@@ -84,10 +101,10 @@ export default function GameInfoPanel() {
   }
 
   return (
-    <div className="flex flex-col gap-8 items-center bg-black border border-white/10 rounded-xl px-6 py-4 w-[340px] h-[450px] text-white shadow-lg">
+    <div className="flex flex-col gap-6 items-center bg-black border border-white/10 rounded-xl px-4 py-4 w-full max-w-[360px] text-white shadow-lg">
       {/* Room Code with Copy */}
-      <div className="flex justify-between items-center w-full bg-[#1D1D1D] px-4 py-3 rounded-lg relative h-[74px]">
-        <span className="text-[15px] tracking-wide font-medium">
+      <div className="flex justify-between items-center w-full bg-[#1D1D1D] px-4 py-3 rounded-lg relative">
+        <span className="text-sm tracking-wide font-medium break-all">
           Room Code : {roomId}
         </span>
         <button onClick={handleCopy}>
@@ -105,7 +122,9 @@ export default function GameInfoPanel() {
           </div>
         )}
       </div>
-      <div className="flex flex-col justify-between items-center w-full h-[240px] bg-[#1D1D1D] px-4 py-3 rounded-lg relative">
+
+      {/* Players and Time Control */}
+      <div className="flex flex-col justify-between items-center w-full gap-4 bg-[#1D1D1D] px-4 py-4 rounded-lg">
         {/* Player 1 */}
         <div className="flex items-center w-full gap-3 bg-[#1D1D1D] px-4 py-3 rounded-lg">
           <Image
@@ -114,7 +133,7 @@ export default function GameInfoPanel() {
             width={20}
             height={20}
           />
-          <span className="text-md">
+          <span className="text-sm truncate">
             {player1} <span className="text-gray-400">(White)</span>
           </span>
         </div>
@@ -127,7 +146,7 @@ export default function GameInfoPanel() {
             width={20}
             height={20}
           />
-          <span className="text-md">
+          <span className="text-sm truncate">
             {player2} <span className="text-gray-400">(Black)</span>
           </span>
         </div>
@@ -140,13 +159,12 @@ export default function GameInfoPanel() {
             width={20}
             height={20}
           />
-          <span className="text-md">
-            Time Control :{" "}
+          <span className="text-sm">
+            Time Control:{" "}
             <span className="text-white font-medium">
               {timeControl.time / 60}+{timeControl.increment || 0}
-            </span>
-            {"  "}
-            <span className="text-gray-400 text-sm ml-1">
+            </span>{" "}
+            <span className="text-gray-400 text-xs ml-1">
               (
               {timeControl.time >= 600
                 ? "Classical"
@@ -158,9 +176,10 @@ export default function GameInfoPanel() {
           </span>
         </div>
       </div>
-      {/* Your Turn To Play */}
-      <div className="w-full bg-[#1D1D1D] text-center py-3 rounded-lg text-[17px] font-bold mt-2">
-        Your Turn To Play
+
+      {/* Dynamic Turn Indicator */}
+      <div className="w-full bg-[#1D1D1D] text-center py-3 rounded-lg text-sm font-bold">
+        {isMyTurn ? "Your Turn to Play" : "Opponent is Thinking..."}
       </div>
     </div>
   );

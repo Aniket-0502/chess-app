@@ -173,7 +173,7 @@ wss.on("connection", (socket) => {
           roomId,
           parsed.from,
           parsed.to,
-          parsed.promotion ?? undefined, // ✅ only pass promotion if available
+          parsed.promotion ?? undefined,
           player.color
         );
 
@@ -209,19 +209,35 @@ wss.on("connection", (socket) => {
         );
 
         if (result.gameOver) {
-          const gameWinner =
-            message.history.length % 2 === 0 ? "black" : "white";
-          getAllSocketsInRoom(roomId).forEach((s) =>
-            s.send(
-              JSON.stringify({
-                type: "game_over",
-                winner: gameWinner,
-                reason: "checkmate",
-              })
-            )
-          );
+          if (result.draw) {
+            // 🟨 Auto-draw: Broadcast draw with reason
+            getAllSocketsInRoom(roomId).forEach((s) =>
+              s.send(
+                JSON.stringify({
+                  type: "game_over",
+                  reason: "draw",
+                  drawReason: result.drawReason,
+                })
+              )
+            );
+          } else {
+            const gameWinner =
+              message.history.length % 2 === 0 ? "black" : "white";
+
+            getAllSocketsInRoom(roomId).forEach((s) =>
+              s.send(
+                JSON.stringify({
+                  type: "game_over",
+                  reason: "checkmate",
+                  winner: gameWinner,
+                })
+              )
+            );
+          }
+
           removeGame(roomId);
         }
+
         break;
       }
 
