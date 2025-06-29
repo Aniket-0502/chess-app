@@ -167,7 +167,7 @@ export default function GameSetupCard() {
     <div className="flex flex-col md:flex-row gap-6 px-4 md:px-6 w-full max-w-6xl mx-auto mb-10">
       {/* CREATE GAME CARD */}
       <Card className="text-white min-h-[540px] flex-1 border-white/5 bg-gradient-to-b from-[#0F172B] to-[#1D293D]">
-        <CardContent className="space-y-4 pt-6">
+        <CardContent className="space-y-4 pt-6 flex flex-col h-full">
           <div className="flex flex-col items-center text-center">
             <h2 className="text-[22px] sm:text-[25px] font-bold font-poppins">
               Create Game
@@ -176,7 +176,7 @@ export default function GameSetupCard() {
               Set up a game and share the code with your opponent
             </div>
           </div>
-          <div className="flex flex-col gap-6 mt-6">
+          <div className="flex flex-col gap-6 mt-6 flex-1">
             <div className="space-y-2">
               <Label htmlFor="name" className="flex items-center">
                 <Image
@@ -282,7 +282,7 @@ export default function GameSetupCard() {
 
       {/* JOIN GAME CARD */}
       <Card className="text-white min-h-[540px] flex-1 border-white/5 bg-gradient-to-b from-[#0F172B] to-[#1D293D]">
-        <CardContent className="space-y-4 pt-6">
+        <CardContent className="space-y-4 pt-6 flex flex-col h-full">
           <div className="flex flex-col items-center text-center">
             <h2 className="text-[22px] sm:text-[25px] font-bold font-poppins">
               Join Game
@@ -291,7 +291,7 @@ export default function GameSetupCard() {
               Enter your name and room ID shared by your opponent
             </div>
           </div>
-          <div className="flex flex-col gap-6 mt-6">
+          <div className="flex flex-col gap-6 mt-6 flex-1">
             <div className="space-y-2">
               <Label htmlFor="join-name" className="flex items-center">
                 <Image
@@ -343,6 +343,9 @@ export default function GameSetupCard() {
                 Ask your opponent for the game code they received
               </div>
             </div>
+
+            {/* Spacer to align button with Create Game */}
+            <div className="flex-1" />
           </div>
           <Button
             onClick={validateJoin}
