@@ -21,6 +21,8 @@ import {
 } from "./gameManager";
 import { startClock } from "./clock";
 import type { ServerMessage, ClientMessage } from "./types";
+import dotenv from "dotenv";
+dotenv.config();
 
 const server = createServer();
 const wss = new WebSocketServer({ server });
@@ -210,7 +212,6 @@ wss.on("connection", (socket) => {
 
         if (result.gameOver) {
           if (result.draw) {
-            // 🟨 Auto-draw: Broadcast draw with reason
             getAllSocketsInRoom(roomId).forEach((s) =>
               s.send(
                 JSON.stringify({
@@ -359,6 +360,25 @@ wss.on("connection", (socket) => {
   });
 });
 
-server.listen(3001, () => {
-  console.log("WebSocket server listening on port 3001");
+// ✅ Production enhancements
+
+// 1. Keep-alive ping
+setInterval(() => {
+  wss.clients.forEach((ws) => {
+    if (ws.readyState === ws.OPEN) ws.ping();
+  });
+}, 30000);
+
+// 2. Graceful crash logging
+process.on("uncaughtException", (err) => {
+  console.error("Uncaught Exception:", err);
+});
+
+process.on("unhandledRejection", (reason) => {
+  console.error("Unhandled Rejection:", reason);
+});
+
+const PORT = process.env.PORT || 5001;
+server.listen(PORT, () => {
+  console.log(`🚀 WebSocket server listening on port ${PORT}`);
 });

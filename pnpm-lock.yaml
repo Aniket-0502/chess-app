@@ -120,12 +120,18 @@ importers:
       '@types/chess.js':
         specifier: ^0.13.7
         version: 0.13.7
+      '@types/dotenv':
+        specifier: ^8.2.3
+        version: 8.2.3
       '@types/ws':
         specifier: ^8.18.1
         version: 8.18.1
       chess.js:
         specifier: ^1.4.0
         version: 1.4.0
+      dotenv:
+        specifier: ^17.0.0
+        version: 17.0.0
       ws:
         specifier: ^8.18.2
         version: 8.18.2
@@ -1069,6 +1075,10 @@ packages:
   '@types/chess.js@0.13.7':
     resolution: {integrity: sha512-o9TeeBdFXelFJXOD9+6sT6bbpBvWG0ZbpOnlIyUNXBjewh7xoFS0+BifGc71T45D5E952io3i8dDsaN6hnLaxw==}
 
+  '@types/dotenv@8.2.3':
+    resolution: {integrity: sha512-g2FXjlDX/cYuc5CiQvyU/6kkbP1JtmGzh0obW50zD7OKeILVL0NSpPWLXVfqoAGQjom2/SLLx9zHq0KXvD6mbw==}
+    deprecated: This is a stub types definition. dotenv provides its own type definitions, so you do not need this installed.
+
   '@types/estree@1.0.7':
     resolution: {integrity: sha512-w28IoSUCJpidD/TGviZwwMJckNESJZXFu7NBZ5YJ4mEUnNraUn9Pm8HSZm/jDF1pDWYKspWE7oVphigUPRakIQ==}
 
@@ -1490,6 +1500,10 @@ packages:
 
   dotenv@16.0.3:
     resolution: {integrity: sha512-7GO6HghkA5fYG9TYnNxi14/7K9f5occMlp3zXAuSxn7CKCxt9xbNWG7yF8hTCSUchlfWSe3uLmlPfigevRItzQ==}
+    engines: {node: '>=12'}
+
+  dotenv@17.0.0:
+    resolution: {integrity: sha512-A0BJ5lrpJVSfnMMXjmeO0xUnoxqsBHWCoqqTnGwGYVdnctqXXUEhJOO7LxmgxJon9tEZFGpe0xPRX0h2v3AANQ==}
     engines: {node: '>=12'}
 
   dunder-proto@1.0.1:
@@ -3734,6 +3748,10 @@ snapshots:
 
   '@types/chess.js@0.13.7': {}
 
+  '@types/dotenv@8.2.3':
+    dependencies:
+      dotenv: 17.0.0
+
   '@types/estree@1.0.7': {}
 
   '@types/glob@7.2.0':
@@ -4237,6 +4255,8 @@ snapshots:
       no-case: 2.3.2
 
   dotenv@16.0.3: {}
+
+  dotenv@17.0.0: {}
 
   dunder-proto@1.0.1:
     dependencies:

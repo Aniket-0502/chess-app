@@ -46,7 +46,8 @@ export default function GameSetupCard() {
     useGameStore.getState().setUserId(newId);
 
     if (!socket) {
-      const newSocket = new WebSocket("ws://localhost:3001");
+      const wsUrl = process.env.NEXT_PUBLIC_WS_URL!;
+      const newSocket = new WebSocket(wsUrl);
       setSocket(newSocket);
 
       newSocket.onmessage = (event) => {
