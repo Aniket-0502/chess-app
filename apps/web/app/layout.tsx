@@ -12,7 +12,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
+    // --- 1. THE FIX ---
+    // Added h-full to the html tag
+    <html lang="en" className="h-full">
       <head>
         {/* ✅ Font Preloading for Performance */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -26,7 +28,12 @@ export default function RootLayout({
           rel="stylesheet"
         />
       </head>
-      <body className="bg-black text-white font-sans">{children}</body>
+      {/* --- 2. THE FIX ---
+        Added h-full and w-full to the body tag
+      */}
+      <body className="bg-black text-white font-sans h-full w-full">
+        {children}
+      </body>
     </html>
   );
 }

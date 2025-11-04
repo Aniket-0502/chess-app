@@ -340,7 +340,8 @@ export default function ChessBoardSection() {
   };
 
   return (
-    <div className="flex flex-col items-center gap-2 w-full px-4">
+    // Root div is correctly centering its children
+    <div className="flex flex-col items-center gap-2 w-full">
       {/* Top Player */}
       <div className="flex items-center justify-between w-full max-w-[480px] mb-2">
         <span className="text-white text-sm font-medium">{topName}</span>
@@ -354,21 +355,24 @@ export default function ChessBoardSection() {
         </div>
       </div>
 
-      {/* Chessboard */}
-      <Chessboard
-        position={fen} // This now updates instantly from the optimistic update
-        onPieceDrop={onDrop}
-        onPromotionPieceSelect={onPromotionPieceSelect}
-        boardOrientation={myColor ?? "white"}
-        customBoardStyle={{
-          borderRadius: "0.75rem",
-          boxShadow: "0 0 0 1px rgba(255, 255, 255, 0.1)",
-        }}
-        boardWidth={boardWidth}
-        customDarkSquareStyle={{ backgroundColor: "#252c58" }}
-        customLightSquareStyle={{ backgroundColor: "#9793dd" }}
-        customSquareStyles={squareStyles}
-      />
+      {/* --- YOUR IDEA: WRAP THE BOARD IN A DIV --- */}
+      <div>
+        <Chessboard
+          position={fen} // This now updates instantly from the optimistic update
+          onPieceDrop={onDrop}
+          onPromotionPieceSelect={onPromotionPieceSelect}
+          boardOrientation={myColor ?? "white"}
+          customBoardStyle={{
+            borderRadius: "0.75rem",
+            boxShadow: "0 0 0 1px rgba(255, 255, 255, 0.1)",
+          }}
+          boardWidth={boardWidth}
+          customDarkSquareStyle={{ backgroundColor: "#252c58" }}
+          customLightSquareStyle={{ backgroundColor: "#9793dd" }}
+          customSquareStyles={squareStyles}
+        />
+      </div>
+      {/* --- END WRAPPER --- */}
 
       {/* Bottom Player */}
       <div className="flex items-center justify-between w-full max-w-[480px] mt-2">
