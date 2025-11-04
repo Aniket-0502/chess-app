@@ -5,7 +5,8 @@
 import { useEffect, useState } from "react";
 import { Button } from "../components/ui/button";
 import { useSocketStore } from "../../store/socketStore";
-import { useGameStore } from "../../store/gameStore";
+// No longer need useGameStore here
+// import { useGameStore } from "../../store/gameStore";
 import {
   Dialog,
   DialogContent,
@@ -17,13 +18,12 @@ import {
 
 export default function GameActions() {
   const { socket } = useSocketStore();
-  const { color } = useGameStore();
+  // const { color } = useGameStore(); // No longer needed
 
   const [drawOfferedByOpponent, setDrawOfferedByOpponent] = useState(false);
-  const [gameOverInfo, setGameOverInfo] = useState<{
-    reason: string;
-    winner?: string;
-  } | null>(null);
+
+  // --- 1. REMOVED THIS STATE ---
+  // const [gameOverInfo, setGameOverInfo] = useState<{...} | null>(null);
 
   const handleDrawOffer = () => {
     if (socket?.readyState === WebSocket.OPEN) {
@@ -55,12 +55,13 @@ export default function GameActions() {
         setDrawOfferedByOpponent(true);
       }
 
-      if (message.type === "game_over") {
-        setGameOverInfo({
-          reason: message.reason,
-          winner: message.winner,
-        });
-      }
+      // --- 2. REMOVED THIS BLOCK ---
+      // if (message.type === "game_over") {
+      //   setGameOverInfo({
+      //     reason: message.reason,
+      //     winner: message.winner,
+      //   });
+      // }
 
       if (message.type === "draw_rejected") {
         alert("Opponent declined the draw offer.");
@@ -88,7 +89,7 @@ export default function GameActions() {
         Resign
       </Button>
 
-      {/* Modal for draw offer */}
+      {/* Modal for draw offer (This is good, keep it) */}
       <Dialog
         open={drawOfferedByOpponent}
         onOpenChange={setDrawOfferedByOpponent}
@@ -112,31 +113,11 @@ export default function GameActions() {
         </DialogContent>
       </Dialog>
 
-      {/* Modal for game over due to resign or draw */}
-      <Dialog open={!!gameOverInfo} onOpenChange={() => setGameOverInfo(null)}>
-        <DialogContent className="bg-[#1e1e2f] text-white">
-          <DialogHeader>
-            <DialogTitle className="text-2xl font-bold">
-              {gameOverInfo?.reason === "draw"
-                ? "Draw Accepted"
-                : gameOverInfo?.reason === "resign"
-                  ? `${gameOverInfo.winner === color ? "Opponent" : "You"} resigned`
-                  : "Game Over"}
-            </DialogTitle>
-            <DialogDescription className="text-lg mt-2">
-              {gameOverInfo?.reason === "draw"
-                ? "The game has ended in a draw."
-                : gameOverInfo?.reason === "resign"
-                  ? `The game has ended because ${
-                      gameOverInfo.winner === color
-                        ? "your opponent resigned."
-                        : "you resigned."
-                    }`
-                  : null}
-            </DialogDescription>
-          </DialogHeader>
-        </DialogContent>
+      {/* --- 3. REMOVED THIS ENTIRE DIALOG --- */}
+      {/* <Dialog open={!!gameOverInfo} onOpenChange={() => setGameOverInfo(null)}>
+        ...
       </Dialog>
+      */}
     </div>
   );
 }

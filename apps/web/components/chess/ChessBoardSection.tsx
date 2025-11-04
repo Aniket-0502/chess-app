@@ -13,6 +13,8 @@ import {
   DialogDescription,
 } from "../components/ui/dialog";
 
+// This local chess instance is now the "source of truth"
+// for optimistic updates, and will be synced with the server.
 const chess = new Chess();
 
 type PromotionPieceOption = "q" | "r" | "b" | "n";
@@ -74,6 +76,7 @@ export default function ChessBoardSection() {
     return () => window.removeEventListener("resize", updateSize);
   }, []);
 
+  // Socket and game logic handler
   useEffect(() => {
     if (!socket) return;
 
@@ -90,11 +93,14 @@ export default function ChessBoardSection() {
         setGameOverInfo(null);
         setIsDialogOpen(false);
         setHistory([]);
+        // Sync local instance
         chess.load(message.fen);
       }
 
       if (message.type === "move_made") {
+        // This handles opponent moves AND confirms our optimistic moves
         setFen(message.fen);
+        // Sync local instance
         chess.load(message.fen);
         setPlayerTimes(message.remainingTime);
         setLastMoveSquares([message.move.from, message.move.to]);
@@ -127,44 +133,104 @@ export default function ChessBoardSection() {
 
       if (message.type === "error") {
         console.warn("⛔ Error message:", message.message);
+        // --- FIX ---
+        // The server rejected our optimistic move. We must undo it.
+        chess.undo();
+        // Reset the board state to the last valid state.
         setFen(chess.fen());
       }
     };
 
     socket.addEventListener("message", handleMessage);
     return () => socket.removeEventListener("message", handleMessage);
-  }, [socket]);
+  }, [socket, setFen, setColor, setHistory, addMoveToHistory]);
 
+  // --- 1. onDrop (NOW FIXED) ---
   function onDrop(sourceSquare: string, targetSquare: string, piece: string) {
+    // --- THIS IS THE FIX ---
+    // Don't allow move if user is not a player or it's not their turn
+    if (!myColor || chess.turn() !== myColor[0]) {
+      return false;
+    }
+    // --- END FIX ---
+
     const isPromotion =
       piece.toLowerCase() === "p" &&
       ((piece === "P" && targetSquare[1] === "8") ||
         (piece === "p" && targetSquare[1] === "1"));
 
+    // Let the promotion modal handle it
     if (isPromotion) return false;
-    sendMove(sourceSquare, targetSquare);
-    return true;
+
+    try {
+      // 1. Try to make the move on the local instance
+      const move = chess.move({
+        from: sourceSquare,
+        to: targetSquare,
+      });
+
+      // 2. If illegal locally, snap back
+      if (move === null) {
+        return false;
+      }
+
+      // 3. OPTIMISTIC UPDATE: Move is legal. Update the store's FEN *immediately*.
+      const newFen = chess.fen();
+      setFen(newFen);
+
+      // 4. Send the validated move to the server
+      if (socket?.readyState === WebSocket.OPEN) {
+        socket.send(
+          JSON.stringify({
+            type: "move",
+            from: sourceSquare,
+            to: targetSquare,
+          })
+        );
+      }
+
+      // 5. Tell react-chessboard the move was successful (client-side)
+      return true;
+    } catch (err) {
+      console.error("❌ Invalid move (onDrop):", err);
+      // Ensure the piece snaps back if our logic failed
+      return false;
+    }
   }
 
+  // --- 2. onPromotionPieceSelect (NOW FIXED) ---
   function onPromotionPieceSelect(
     piece?: string,
     promoteFromSquare?: string,
     promoteToSquare?: string
   ): boolean {
+    // --- THIS IS THE FIX ---
+    // Don't allow move if user is not a player or it's not their turn
+    if (!myColor || chess.turn() !== myColor[0]) {
+      return false;
+    }
+    // --- END FIX ---
+
     if (!piece || !promoteFromSquare || !promoteToSquare) return false;
 
     const promotion = piece[1]?.toLowerCase() as PromotionPieceOption;
 
     try {
+      // 1. Try to make the promotion move locally
       const move = chess.move({
         from: promoteFromSquare,
         to: promoteToSquare,
         promotion,
       });
 
-      if (!move) throw new Error("Illegal move");
-      chess.undo();
+      // 2. If illegal, return false
+      if (!move) throw new Error("Illegal promotion");
 
+      // 3. OPTIMISTIC UPDATE: Update the FEN in the store
+      const newFen = chess.fen();
+      setFen(newFen);
+
+      // 4. Send to server
       if (socket?.readyState === WebSocket.OPEN) {
         socket.send(
           JSON.stringify({
@@ -176,28 +242,11 @@ export default function ChessBoardSection() {
         );
       }
 
+      // 5. Tell react-chessboard the move was successful
       return true;
     } catch (err) {
       console.error("❌ Promotion move failed:", err);
       return false;
-    }
-  }
-
-  function sendMove(
-    from: string,
-    to: string,
-    promotion?: PromotionPieceOption
-  ) {
-    try {
-      const move = chess.move({ from, to, promotion });
-      if (!move) throw new Error("Illegal move");
-      chess.undo();
-
-      if (socket?.readyState === WebSocket.OPEN) {
-        socket.send(JSON.stringify({ type: "move", from, to, promotion }));
-      }
-    } catch (err) {
-      console.error("❌ Invalid move:", err);
     }
   }
 
@@ -217,6 +266,7 @@ export default function ChessBoardSection() {
   const bottomName = myColor === "white" ? whiteName : blackName;
   const topColor = myColor === "white" ? "black" : "white";
 
+  // Square highlighting logic (now reliably in sync)
   const squareStyles: Record<string, React.CSSProperties> = {};
   if (lastMoveSquares.length === 2) {
     lastMoveSquares.forEach((sq) => {
@@ -258,6 +308,37 @@ export default function ChessBoardSection() {
     }
   };
 
+  // --- 3. Game Over Description Function (Corrected) ---
+  const getGameOverDescription = () => {
+    if (!gameOverInfo) return "";
+
+    const { reason, winner, drawReason } = gameOverInfo;
+
+    // 1. Handle Draws
+    if (reason === "Draw") {
+      return getDrawDescription(drawReason);
+    }
+
+    // 2. Handle Resignation (This is the key fix)
+    if (reason === "Resignation") {
+      // Check if the winner is *me* (the person looking at the screen)
+      if (winner === bottomName) {
+        return "Your opponent has resigned. You win!";
+      } else {
+        // The winner must be the opponent
+        return "You resigned the game.";
+      }
+    }
+
+    // 3. Handle Checkmate or Timeout
+    const reasonText = reason.toLowerCase();
+    if (winner === bottomName) {
+      return `You win by ${reasonText}!`;
+    } else {
+      return `You lost by ${reasonText}.`;
+    }
+  };
+
   return (
     <div className="flex flex-col items-center gap-2 w-full px-4">
       {/* Top Player */}
@@ -275,7 +356,7 @@ export default function ChessBoardSection() {
 
       {/* Chessboard */}
       <Chessboard
-        position={fen}
+        position={fen} // This now updates instantly from the optimistic update
         onPieceDrop={onDrop}
         onPromotionPieceSelect={onPromotionPieceSelect}
         boardOrientation={myColor ?? "white"}
@@ -302,17 +383,18 @@ export default function ChessBoardSection() {
         </div>
       </div>
 
-      {/* Game Over Modal */}
+      {/* --- 4. Game Over Modal (Corrected) --- */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="bg-[#1e1e2f] text-white">
           <DialogHeader>
             <DialogTitle className="text-2xl font-bold">
-              {gameOverInfo?.reason}
+              {/* This is now simpler */}
+              {gameOverInfo?.reason === "Draw" ? "Draw" : "Game Over"}
             </DialogTitle>
             <DialogDescription className="text-lg mt-2">
-              {gameOverInfo?.reason === "Draw"
-                ? getDrawDescription(gameOverInfo.drawReason)
-                : `${gameOverInfo?.winner} wins the game.`}
+              {/* This uses our new logic */}
+
+              {getGameOverDescription()}
             </DialogDescription>
           </DialogHeader>
         </DialogContent>
