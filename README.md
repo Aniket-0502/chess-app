@@ -4,11 +4,6 @@ A real-time multiplayer chess application built using **Next.js 14 (App Router)*
 
 ---
 
-## 🌐 Live Demo
-
->
-
----
 
 ## 🧩 Features
 
@@ -17,10 +12,10 @@ A real-time multiplayer chess application built using **Next.js 14 (App Router)*
 - ✅ Guest play (no auth required)
 - ✅ Custom time controls (e.g., 1+0, 3+2, 10+5)
 - ✅ Join via **room code**
-- ✅ Endgame result modal with **move replay**
+- ✅ Endgame result modal 
 - ✅ Move history table
 - ✅ Responsive UI (mobile-first)
-- ✅ Profile page for registered users
+
 
 ---
 
