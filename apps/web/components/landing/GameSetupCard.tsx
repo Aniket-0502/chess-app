@@ -39,6 +39,7 @@ export default function GameSetupCard() {
   });
 
   useEffect(() => {
+  const init = async () => {
     const existing = localStorage.getItem("userId");
     const newId = existing || uuidv4();
     if (!existing) localStorage.setItem("userId", newId);
@@ -46,34 +47,44 @@ export default function GameSetupCard() {
     useGameStore.getState().setUserId(newId);
 
     if (!socket) {
-      const wsUrl = process.env.NEXT_PUBLIC_WS_URL!;
-      const newSocket = new WebSocket(wsUrl);
-      setSocket(newSocket);
+      try {
+        await fetch("https://kwikchess-ws-server.onrender.com/");
+        await new Promise((res) => setTimeout(res, 4000));
 
-      newSocket.onmessage = (event) => {
-        const message = JSON.parse(event.data);
+        const wsUrl = process.env.NEXT_PUBLIC_WS_URL!;
+        const newSocket = new WebSocket(wsUrl);
+        setSocket(newSocket);
 
-        if (message.type === "error") {
-          alert(message.message);
-          return;
-        }
+        newSocket.onmessage = (event) => {
+          const message = JSON.parse(event.data);
 
-        if (message.type === "room_created" || message.type === "joined") {
-          newSocket.send(JSON.stringify({ type: "status_check" }));
-          router.push("/play");
-        }
+          if (message.type === "error") {
+            alert(message.message);
+            return;
+          }
 
-        if (message.type === "status" && message.players) {
-          useGameStore.getState().setPlayerUserIds({
-            whitePlayerUserId: message.players.white,
-            blackPlayerUserId: message.players.black,
-          });
-        }
+          if (message.type === "room_created" || message.type === "joined") {
+            newSocket.send(JSON.stringify({ type: "status_check" }));
+            router.push("/play");
+          }
 
-        console.log("[WS] Message from server:", message);
-      };
+          if (message.type === "status" && message.players) {
+            useGameStore.getState().setPlayerUserIds({
+              whitePlayerUserId: message.players.white,
+              blackPlayerUserId: message.players.black,
+            });
+          }
+
+          console.log("[WS] Message from server:", message);
+        };
+      } catch (err) {
+        console.error("Backend wake/connect failed:", err);
+      }
     }
-  }, [router, socket, setSocket]);
+  };
+
+  init();
+}, [router, socket, setSocket]);
 
   const parseTimeControl = (
     str: string
