@@ -48,7 +48,7 @@ export default function GameSetupCard() {
 
     if (!socket) {
       try {
-        await fetch("https://kwikchess-ws-server.onrender.com/");
+        fetch("https://kwikchess-ws-server.onrender.com/");
         await new Promise((res) => setTimeout(res, 4000));
 
         const wsUrl = process.env.NEXT_PUBLIC_WS_URL!;
