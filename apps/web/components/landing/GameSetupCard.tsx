@@ -20,7 +20,7 @@ import { useGameStore } from "../../store/gameStore";
 
 export default function GameSetupCard() {
   const [userId, setUserId] = useState("");
-  const { setSocket } = useSocketStore();
+  const { socket, setSocket } = useSocketStore();
   const { setGameInfo } = useGameStore();
   const router = useRouter();
 
@@ -44,7 +44,36 @@ export default function GameSetupCard() {
     if (!existing) localStorage.setItem("userId", newId);
     setUserId(newId);
     useGameStore.getState().setUserId(newId);
-  }, []);
+
+    if (!socket) {
+      const wsUrl = process.env.NEXT_PUBLIC_WS_URL!;
+      const newSocket = new WebSocket(wsUrl);
+      setSocket(newSocket);
+
+      newSocket.onmessage = (event) => {
+        const message = JSON.parse(event.data);
+
+        if (message.type === "error") {
+          alert(message.message);
+          return;
+        }
+
+        if (message.type === "room_created" || message.type === "joined") {
+          newSocket.send(JSON.stringify({ type: "status_check" }));
+          router.push("/play");
+        }
+
+        if (message.type === "status" && message.players) {
+          useGameStore.getState().setPlayerUserIds({
+            whitePlayerUserId: message.players.white,
+            blackPlayerUserId: message.players.black,
+          });
+        }
+
+        console.log("[WS] Message from server:", message);
+      };
+    }
+  }, [router, socket, setSocket]);
 
   const parseTimeControl = (
     str: string
@@ -58,41 +87,7 @@ export default function GameSetupCard() {
     };
   };
 
-  const wakeBackend = async () => {
-    try {
-      await fetch("https://kwikchess-ws-server.onrender.com/");
-      await new Promise((res) => setTimeout(res, 4000));
-    } catch (err) {
-      console.error("Wake failed:", err);
-    }
-  };
-
-  const attachSocketHandlers = (newSocket: WebSocket) => {
-    newSocket.onmessage = (event) => {
-      const message = JSON.parse(event.data);
-
-      if (message.type === "error") {
-        alert(message.message);
-        return;
-      }
-
-      if (message.type === "room_created" || message.type === "joined") {
-        newSocket.send(JSON.stringify({ type: "status_check" }));
-        router.push("/play");
-      }
-
-      if (message.type === "status" && message.players) {
-        useGameStore.getState().setPlayerUserIds({
-          whitePlayerUserId: message.players.white,
-          blackPlayerUserId: message.players.black,
-        });
-      }
-
-      console.log("[WS] Message from server:", message);
-    };
-  };
-
-  const validateCreate = async () => {
+  const validateCreate = () => {
     const newErrors = {
       createName: createName.trim() === "",
       createColor: createColor === "",
@@ -105,47 +100,37 @@ export default function GameSetupCard() {
     const valid =
       !newErrors.createName && !newErrors.createColor && !newErrors.createTime;
 
-    if (valid) {
-      const wsUrl = process.env.NEXT_PUBLIC_WS_URL!;
+    if (valid && socket?.readyState === WebSocket.OPEN) {
+      const parsed = parseTimeControl(createTime);
+      const finalColor: "white" | "black" =
+        createColor === "random"
+          ? Math.random() < 0.5
+            ? "white"
+            : "black"
+          : (createColor as "white" | "black");
 
-      await wakeBackend();
+      setGameInfo({
+        player1: createName,
+        player2: "",
+        player1Color: finalColor,
+        player2Color: finalColor === "white" ? "black" : "white",
+        roomId: "",
+        timeControl: parsed,
+      });
 
-      const newSocket = new WebSocket(wsUrl);
-      setSocket(newSocket);
-      attachSocketHandlers(newSocket);
-
-      newSocket.onopen = () => {
-        const parsed = parseTimeControl(createTime);
-        const finalColor: "white" | "black" =
-          createColor === "random"
-            ? Math.random() < 0.5
-              ? "white"
-              : "black"
-            : (createColor as "white" | "black");
-
-        setGameInfo({
-          player1: createName,
-          player2: "",
-          player1Color: finalColor,
-          player2Color: finalColor === "white" ? "black" : "white",
-          roomId: "",
+      socket.send(
+        JSON.stringify({
+          type: "create",
+          userId,
+          name: createName,
+          creatorColorChoice: finalColor,
           timeControl: parsed,
-        });
-
-        newSocket.send(
-          JSON.stringify({
-            type: "create",
-            userId,
-            name: createName,
-            creatorColorChoice: finalColor,
-            timeControl: parsed,
-          })
-        );
-      };
+        })
+      );
     }
   };
 
-  const validateJoin = async () => {
+  const validateJoin = () => {
     const newErrors = {
       createName: false,
       createColor: false,
@@ -157,34 +142,24 @@ export default function GameSetupCard() {
 
     const valid = !newErrors.joinName && !newErrors.roomId;
 
-    if (valid) {
-      const wsUrl = process.env.NEXT_PUBLIC_WS_URL!;
+    if (valid && socket?.readyState === WebSocket.OPEN) {
+      setGameInfo({
+        player1: "",
+        player2: joinName,
+        player1Color: "white",
+        player2Color: "black",
+        roomId: roomId,
+        timeControl: { time: 0, increment: 0 },
+      });
 
-      await wakeBackend();
-
-      const newSocket = new WebSocket(wsUrl);
-      setSocket(newSocket);
-      attachSocketHandlers(newSocket);
-
-      newSocket.onopen = () => {
-        setGameInfo({
-          player1: "",
-          player2: joinName,
-          player1Color: "white",
-          player2Color: "black",
-          roomId: roomId,
-          timeControl: { time: 0, increment: 0 },
-        });
-
-        newSocket.send(
-          JSON.stringify({
-            type: "join",
-            userId,
-            name: joinName,
-            roomId,
-          })
-        );
-      };
+      socket.send(
+        JSON.stringify({
+          type: "join",
+          userId,
+          name: joinName,
+          roomId,
+        })
+      );
     }
   };
 
@@ -369,6 +344,7 @@ export default function GameSetupCard() {
               </div>
             </div>
 
+            {/* Spacer to align button with Create Game */}
             <div className="flex-1" />
           </div>
           <Button
